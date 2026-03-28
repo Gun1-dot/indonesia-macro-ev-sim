@@ -8,88 +8,54 @@ function simulate(inp) {
   const er=RT+(passThrough/100)*Math.max(0,ld-RT), gp=Math.max(0,ld-er), bg=Math.max(0,bld-RT);
   const eu=(evFleetPct/100)*MT*1e6, dp=(eu*avgKmPerBike*FK)/1e9, ev=Math.max(0,VL-dp);
   const sb=(gp*ev*1e9)/1e12*subsidyIntensity, bs=(bg*VL*1e9)/1e12, sc2=sb-bs;
-  const pn=PB*(brent/BB)*0.7, fp=(sc2*1e12/(GDP*1e9*usdIdr))*100;
+  const fp=(sc2*1e12/(GDP*1e9*usdIdr))*100;
   const ib=(IB*365*(brent+CR))/1e9, bi2=(IB*365*(BB+CR))/1e9;
   const ai=(dp*1e9*(brent+CR)/159)/1e9, ni=ib-ai, td=ni-bi2, cp=(td/GDP)*100;
   const fc=((er-RT)/RT)*100, cd=CW*(fc/100)*100, ct=cd*(1+CM);
   const fx=Math.min(10,Math.max(0,((usdIdr-BI)/BI)*30+(td/5)*2+((brent-BB)/BB)*5));
   const as2=(gp*dp*1e9)/1e12;
-  // CO2: gasoline emits ~2.31 kg CO2 per liter
-  const co2ReducedTons = (dp * 1e9 * 2.31) / 1000; // tons
+  const co2=(dp*1e9*2.31)/1000;
   const st={fiscal:Math.min(10,Math.max(0,(sb/100)*3+fp*5)),external:Math.min(10,Math.max(0,(td/3)*2+cp*10)),inflation:Math.min(10,Math.max(0,ct*2)),fx};
   const hm=timeHorizon<=1?1:timeHorizon<=3?0.85:0.7;
   const ov=(st.fiscal*0.3+st.external*0.25+st.inflation*0.25+st.fx*0.2)*hm;
-  return{ld:Math.round(ld),er:Math.round(er),gp:Math.round(gp),sb:+(sb).toFixed(1),sc:+(sc2).toFixed(1),fp:+(fp).toFixed(2),ni:+(ni).toFixed(1),td:+(td).toFixed(1),cp:+(cp).toFixed(2),fc:+(fc).toFixed(1),ct:+(ct).toFixed(2),fx:+(fx).toFixed(1),dp:+(dp).toFixed(2),ai:+(ai).toFixed(2),as2:+(as2).toFixed(1),evM:+(eu/1e6).toFixed(1),co2:Math.round(co2ReducedTons),st,ov:+(ov).toFixed(1)};
+  return{ld:Math.round(ld),er:Math.round(er),gp:Math.round(gp),sb:+(sb).toFixed(1),sc:+(sc2).toFixed(1),fp:+(fp).toFixed(2),ni:+(ni).toFixed(1),td:+(td).toFixed(1),cp:+(cp).toFixed(2),fc:+(fc).toFixed(1),ct:+(ct).toFixed(2),fx:+(fx).toFixed(1),dp:+(dp).toFixed(2),ai:+(ai).toFixed(2),as2:+(as2).toFixed(1),evM:+(eu/1e6).toFixed(1),co2:Math.round(co2),st,ov:+(ov).toFixed(1)};
 }
 
-/* ═══ ENHANCED POLICY ENGINE with social/political impacts ═══ */
-function genPol(r, inp) {
-  const e = Object.entries(r.st).sort((a,b) => b[1] - a[1]);
-  const nm = { fiscal:"Fiscal", external:"External", inflation:"Inflation", fx:"Exchange Rate" };
-  const sv = r.ov > 7 ? "severe" : r.ov > 5 ? "significant" : r.ov > 3 ? "moderate" : "manageable";
-
-  let hl = r.ov <= 2
-    ? `Indonesia's macro position is stable at USD ${inp.brent}/bbl. No material stress detected across fiscal, external, or inflation channels.`
-    : r.ov <= 4
-    ? `${sv.charAt(0).toUpperCase()+sv.slice(1)} pressure detected, primarily through the ${nm[e[0][0]].toLowerCase()} channel. The situation is manageable but requires monitoring.`
-    : r.ov <= 6
-    ? `Significant stress across ${nm[e[0][0]].toLowerCase()} and ${nm[e[1][0]].toLowerCase()} channels simultaneously. Policy intervention is advisable.`
-    : `Warning: Severe macro stress across multiple channels. Without coordinated policy response, cascading economic and social consequences are likely.`;
-
-  // ─── 1st Order Impacts (direct economic) ───
-  let first = [];
-  if (r.st.fiscal > 3) first.push("Fuel subsidy burden consumes fiscal space that would otherwise fund infrastructure, health, and education — every IDR spent on subsidies is an IDR not invested in development.");
-  if (r.st.inflation > 2) first.push(`Consumer prices rise by an estimated ${r.ct} percentage points, directly eroding the purchasing power of 280 million Indonesians — with the poorest households hit hardest as they spend a larger share of income on fuel and food.`);
-  if (r.st.external > 3) first.push("The widening oil trade deficit drains foreign exchange reserves, increases Indonesia's external financing needs, and raises the country's perceived risk among international investors.");
-  if (r.st.fx > 3) first.push("Rupiah depreciation makes all imports more expensive — not just fuel, but food, medicine, raw materials — creating a cost-of-living spiral that compounds the original oil shock.");
-  if (first.length === 0) first.push("Under this scenario, direct economic impacts remain contained. No single transmission channel is under significant pressure.");
-
-  // ─── 2nd Order Impacts (social & political) ───
-  let second = [];
-  if (r.st.inflation > 3 && inp.passThrough > 30) {
-    second.push("Rising fuel and food prices risk triggering public protests and social unrest — Indonesia has a documented history of fuel price hikes leading to street demonstrations (1998, 2005, 2013, 2022). The political cost of visible price increases is high and immediate.");
-    second.push("Low-income and informal sector workers — ojol drivers, street vendors, farmers — face disproportionate impact. Their margins are already thin; a 10-30% increase in transport costs can push vulnerable households below the poverty line.");
-  }
-  if (r.st.fiscal > 4) {
-    second.push("Subsidy crowding-out forces painful trade-offs: delayed infrastructure projects, frozen civil servant hiring, reduced healthcare and education budgets. These cuts are invisible in the short term but compound into long-term development setbacks.");
-    second.push("Political pressure to maintain subsidies creates a fiscal trap — elected officials face backlash for raising fuel prices but also face backlash when roads aren't built, hospitals are understaffed, and schools deteriorate. There is no cost-free option.");
-  }
-  if (r.st.fx > 4) {
-    second.push("A weakening rupiah erodes public confidence in economic management. Currency instability becomes a visible, emotionally charged metric that dominates media coverage and shapes voter sentiment, even when underlying fundamentals are manageable.");
-  }
-  if (r.ov > 5) {
-    second.push("Sustained macro stress creates an environment where foreign direct investment slows, job creation weakens, and the demographic dividend — Indonesia's young, growing workforce — risks becoming a demographic liability if employment absorption falls short.");
-  }
-  if (second.length === 0) second.push("Social and political risks remain low under this scenario. No immediate pressure on household welfare or political stability.");
-
-  // ─── Why Now ───
-  let whyNow = [];
-  whyNow.push("Indonesia's oil import dependence is structural and growing — domestic production has declined from 1.6M bpd in the 1990s to under 600,000 bpd today, while consumption continues to rise with population and economic growth. The vulnerability is not cyclical; it deepens every year that passes without structural change.");
-  if (inp.brent > 85) whyNow.push(`At USD ${inp.brent}/bbl, the window for low-cost adjustment is already closing. Every month of delay at elevated oil prices adds IDR ${Math.round(r.sb / 12 * 10) / 10} trillion in additional subsidy obligations that must eventually be paid — by taxpayers, consumers, or through forgone development.`);
-  whyNow.push("The global EV transition is accelerating. Indonesia has a narrow window to build domestic EV manufacturing capacity and capture the supply chain value. Countries that move early (China, Vietnam, India, Thailand) are already locking in manufacturing investment. Delay means Indonesia imports EVs rather than builds them.");
-  whyNow.push("Indonesia's 2030 demographic window — the period of peak working-age population relative to dependents — is a once-in-a-generation opportunity. Wasting fiscal space on fuel subsidies during this window means failing to invest in the human capital and infrastructure that will determine whether Indonesia becomes a high-income economy or stalls at middle-income status.");
-
-  // ─── What If Not ───
-  let whatIfNot = [];
-  if (r.ov > 3) {
-    whatIfNot.push("If no structural action is taken, Indonesia's oil import bill will continue to grow as a share of GDP, the subsidy burden will consume an ever-larger share of the budget, and the economy's sensitivity to global oil volatility will increase — not decrease — over time.");
-    whatIfNot.push("Each year of delayed EV adoption means 130 million motorcycles continue burning imported gasoline. At current consumption rates, that is approximately 25-30 billion liters of imported fuel per year — a permanent, recurring drain on the trade balance and budget that compounds annually.");
-  }
-  if (r.st.fiscal > 4) whatIfNot.push("Without subsidy reform, Indonesia risks a repeat of the 2013-2014 fiscal crisis, when energy subsidies consumed over 20% of the national budget and forced emergency austerity measures that damaged growth and public services for years.");
-  if (r.st.inflation > 3) whatIfNot.push("Without proactive management, inflationary pressure from fuel costs will force Bank Indonesia into reactive rate hikes that slow credit growth, dampen investment, and reduce GDP growth by an estimated 0.3-0.5 percentage points — a self-inflicted wound on top of the external shock.");
-  whatIfNot.push("The long-term cost of inaction is not stasis — it is structural decline. Indonesia's peer competitors (Vietnam, India, Thailand) are moving aggressively on energy transition and EV industrialization. Standing still means falling behind.");
-
-  // ─── Recommendations ───
-  let rc = [];
-  if (r.st.fiscal > 4 && inp.passThrough < 50) rc.push("Implement partial fuel price pass-through with targeted cash transfers (BLT) to protect vulnerable households while reducing the fiscal burden");
-  if (r.st.fiscal > 3) rc.push("Reprioritize fiscal spending to prevent subsidy crowding-out of development budget — protect infrastructure, health, and education allocations");
-  if (r.st.inflation > 3) rc.push("Coordinate with Bank Indonesia on inflation expectations management and prepare for potential rate adjustment");
-  if (r.st.external > 4) rc.push("Strengthen FX reserves and activate bilateral swap arrangements to buffer against external pressure");
-  if (inp.evFleetPct < 5 && inp.brent > 85) rc.push("Accelerate EV 2-wheeler incentives — the macro resilience case is strongest during elevated oil prices");
-  if (inp.evFleetPct >= 5) rc.push("Sustain EV momentum; extend incentives to high-mileage segments (ride-hailing, delivery) for maximum gasoline displacement");
-  rc.push("Ensure APBN-P revision preparedness for Pertamina compensation obligations");
-
-  return { hl, sv, top: nm[e[0][0]], rc, first, second, whyNow, whatIfNot };
+/* ═══ POLICY ENGINE ═══ */
+function genPol(r,inp){
+  const e=Object.entries(r.st).sort((a,b)=>b[1]-a[1]);
+  const nm={fiscal:"Fiscal",external:"External",inflation:"Inflation",fx:"Exchange Rate"};
+  const sv=r.ov>7?"severe":r.ov>5?"significant":r.ov>3?"moderate":"manageable";
+  let hl=r.ov<=2?`Indonesia\u2019s macro position is stable at USD ${inp.brent}/bbl. No material stress.`:r.ov<=4?`${sv.charAt(0).toUpperCase()+sv.slice(1)} pressure through the ${nm[e[0][0]].toLowerCase()} channel.`:r.ov<=6?`Significant stress across ${nm[e[0][0]].toLowerCase()} and ${nm[e[1][0]].toLowerCase()} channels. Intervention advisable.`:`Warning: Severe macro stress. Coordinated response required.`;
+  let first=[];
+  if(r.st.fiscal>3)first.push("Fuel subsidy burden consumes fiscal space meant for infrastructure, health, and education.");
+  if(r.st.inflation>2)first.push(`Consumer prices rise ~${r.ct}pp, eroding purchasing power of 280M Indonesians.`);
+  if(r.st.external>3)first.push("Widening oil trade deficit drains FX reserves and raises investor risk perception.");
+  if(r.st.fx>3)first.push("Rupiah depreciation makes all imports costlier \u2014 fuel, food, medicine \u2014 compounding the shock.");
+  if(!first.length)first.push("Direct economic impacts remain contained.");
+  let second=[];
+  if(r.st.inflation>3&&inp.passThrough>30){second.push("Rising prices risk public protests \u2014 Indonesia has history of unrest following fuel hikes (1998, 2005, 2013, 2022).");second.push("Ojol drivers, vendors, farmers hit hardest \u2014 10-30% transport cost rise can push households below poverty line.");}
+  if(r.st.fiscal>4){second.push("Subsidy crowding-out: delayed infrastructure, frozen hiring, reduced healthcare/education.");second.push("Political trap: backlash for raising prices AND for not building roads. No cost-free option.");}
+  if(r.st.fx>4)second.push("Weakening rupiah erodes public confidence, dominates media, shapes voter sentiment.");
+  if(r.ov>5)second.push("Sustained stress slows FDI, weakens job creation, risks turning demographic dividend into liability.");
+  if(!second.length)second.push("Social and political risks remain low.");
+  let whyNow=["Oil dependence is structural: production fell from 1.6M bpd (1990s) to <600K. Vulnerability deepens annually."];
+  if(inp.brent>85)whyNow.push(`At $${inp.brent}/bbl, every month of delay = ~IDR ${Math.round(r.sb/12*10)/10}T in subsidy obligations.`);
+  whyNow.push("Global EV race accelerating. Countries moving early lock in manufacturing. Delay = importing EVs instead of building them.");
+  whyNow.push("Indonesia\u2019s 2030 demographic window: wasting fiscal space on subsidies = failing to invest in human capital.");
+  let whatIfNot=[];
+  if(r.ov>3){whatIfNot.push("Without action, import bill grows, subsidy expands, oil sensitivity increases \u2014 not decreases.");whatIfNot.push("130M motorcycles burning 25-30B liters/year of imported gasoline. A permanent, compounding drain.");}
+  if(r.st.fiscal>4)whatIfNot.push("Risk of repeat 2013-14 crisis: energy subsidies consumed 20%+ of budget, forced emergency austerity.");
+  whatIfNot.push("Inaction is not stasis \u2014 it is structural decline. Vietnam, India, Thailand are moving. Standing still = falling behind.");
+  let rc=[];
+  if(r.st.fiscal>4&&inp.passThrough<50)rc.push("Partial fuel price pass-through + targeted cash transfers (BLT) to protect vulnerable households");
+  if(r.st.fiscal>3)rc.push("Reprioritize spending: protect infrastructure, health, education from subsidy crowding-out");
+  if(r.st.inflation>3)rc.push("Coordinate with Bank Indonesia on inflation management");
+  if(r.st.external>4)rc.push("Strengthen FX reserves; activate bilateral swap arrangements");
+  if(inp.evFleetPct<5&&inp.brent>85)rc.push("Accelerate EV 2W incentives \u2014 macro resilience peaks during high oil");
+  if(inp.evFleetPct>=5)rc.push("Sustain EV momentum; extend to ride-hailing and delivery segments");
+  rc.push("Ensure APBN-P revision preparedness for Pertamina compensation");
+  return{hl,sv,top:nm[e[0][0]],rc,first,second,whyNow,whatIfNot};
 }
 
 const PR=[
@@ -100,525 +66,410 @@ const PR=[
   {n:"EV Future",d:"12% EV fleet",b:95,u:16000,p:30,e:12,t:5,k:8000,s:1},
 ];
 
-/* ═══ SVG ILLUSTRATIONS ═══ */
-function OilBarrelSVG(){return(<svg viewBox="0 0 200 200" width="100%" height="100%"><defs><linearGradient id="og" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#1e293b"/><stop offset="100%" stopColor="#0f172a"/></linearGradient></defs><rect width="200" height="200" fill="#f1f5f9" rx="12"/><ellipse cx="100" cy="60" rx="40" ry="14" fill="#334155"/><rect x="60" y="60" width="80" height="80" fill="url(#og)"/><ellipse cx="100" cy="140" rx="40" ry="14" fill="#1e293b"/><ellipse cx="100" cy="60" rx="40" ry="14" fill="#475569"/><text x="100" y="108" textAnchor="middle" fill="#94a3b8" fontSize="16" fontWeight="700" fontFamily="monospace">OIL</text><circle cx="100" cy="85" r="4" fill="#f59e0b"/></svg>);}
-function MoneySVG(){return(<svg viewBox="0 0 200 200" width="100%" height="100%"><rect width="200" height="200" fill="#f1f5f9" rx="12"/><rect x="35" y="55" width="130" height="75" rx="8" fill="#1e293b"/><rect x="40" y="60" width="120" height="65" rx="6" fill="#334155"/><circle cx="100" cy="92" r="20" fill="none" stroke="#64748b" strokeWidth="2"/><text x="100" y="98" textAnchor="middle" fill="#94a3b8" fontSize="18" fontWeight="700" fontFamily="serif">Rp</text><rect x="50" y="70" width="8" height="8" rx="4" fill="#475569"/><rect x="142" y="70" width="8" height="8" rx="4" fill="#475569"/></svg>);}
-function MotorcycleSVG(){return(<svg viewBox="0 0 200 200" width="100%" height="100%"><rect width="200" height="200" fill="#f0fdf4" rx="12"/><circle cx="60" cy="140" r="22" fill="none" stroke="#16a34a" strokeWidth="3"/><circle cx="60" cy="140" r="8" fill="#16a34a"/><circle cx="150" cy="140" r="22" fill="none" stroke="#16a34a" strokeWidth="3"/><circle cx="150" cy="140" r="8" fill="#16a34a"/><path d="M60 140 L80 110 L130 105 L150 140" fill="none" stroke="#0f172a" strokeWidth="3" strokeLinejoin="round"/><path d="M80 110 L90 85 L110 80 L130 105" fill="#0f172a" opacity="0.15" stroke="#0f172a" strokeWidth="2"/><path d="M110 80 L125 75" stroke="#0f172a" strokeWidth="2"/><circle cx="90" cy="85" r="3" fill="#16a34a"/><text x="100" y="175" textAnchor="middle" fill="#16a34a" fontSize="10" fontWeight="700">EV</text></svg>);}
-function HospitalSVG(){return(<svg viewBox="0 0 200 200" width="100%" height="100%"><rect width="200" height="200" fill="#eff6ff" rx="12"/><rect x="55" y="60" width="90" height="100" rx="4" fill="#1e293b"/><rect x="45" y="100" width="30" height="60" rx="3" fill="#334155"/><rect x="125" y="100" width="30" height="60" rx="3" fill="#334155"/><rect x="85" y="40" width="30" height="30" rx="2" fill="#0ea5e9"/><rect x="96" y="44" width="8" height="22" rx="1" fill="#fff"/><rect x="89" y="51" width="22" height="8" rx="1" fill="#fff"/><rect x="70" y="75" width="14" height="14" rx="2" fill="#475569"/><rect x="93" y="75" width="14" height="14" rx="2" fill="#475569"/><rect x="116" y="75" width="14" height="14" rx="2" fill="#475569"/><rect x="90" y="130" width="20" height="30" rx="2" fill="#64748b"/></svg>);}
-function SchoolSVG(){return(<svg viewBox="0 0 200 200" width="100%" height="100%"><rect width="200" height="200" fill="#faf5ff" rx="12"/><polygon points="100,35 160,75 40,75" fill="#8b5cf6" opacity="0.2" stroke="#8b5cf6" strokeWidth="2"/><rect x="50" y="75" width="100" height="80" rx="3" fill="#1e293b"/><rect x="60" y="85" width="18" height="20" rx="2" fill="#475569"/><rect x="90" y="85" width="18" height="20" rx="2" fill="#475569"/><rect x="120" y="85" width="18" height="20" rx="2" fill="#475569"/><rect x="88" y="125" width="24" height="30" rx="2" fill="#64748b"/><rect x="94" y="60" width="12" height="18" rx="1" fill="#8b5cf6"/><circle cx="100" cy="56" r="6" fill="#8b5cf6"/></svg>);}
-function RoadSVG(){return(<svg viewBox="0 0 200 200" width="100%" height="100%"><rect width="200" height="200" fill="#fffbeb" rx="12"/><path d="M0 200 L70 80 L130 80 L200 200" fill="#334155"/><path d="M0 200 L75 85 L125 85 L200 200" fill="#475569"/><rect x="95" y="100" width="10" height="20" rx="1" fill="#fbbf24"/><rect x="95" y="130" width="10" height="20" rx="1" fill="#fbbf24"/><rect x="95" y="160" width="10" height="20" rx="1" fill="#fbbf24"/></svg>);}
-function CO2SVG(){return(<svg viewBox="0 0 200 200" width="100%" height="100%"><rect width="200" height="200" fill="#ecfdf5" rx="12"/><circle cx="100" cy="75" r="30" fill="#16a34a" opacity="0.15"/><circle cx="75" cy="65" r="22" fill="#16a34a" opacity="0.2"/><circle cx="125" cy="65" r="22" fill="#16a34a" opacity="0.2"/><circle cx="85" cy="50" r="18" fill="#16a34a" opacity="0.25"/><circle cx="115" cy="50" r="18" fill="#16a34a" opacity="0.25"/><rect x="95" y="90" width="10" height="50" rx="3" fill="#15803d"/><rect x="88" y="140" width="24" height="6" rx="3" fill="#14532d" opacity="0.3"/><text x="100" y="175" textAnchor="middle" fill="#16a34a" fontSize="11" fontWeight="700" fontFamily="sans-serif">CO2</text></svg>);}
-function TreeSVG(){return(<svg viewBox="0 0 200 200" width="100%" height="100%"><rect width="200" height="200" fill="#f0fdf4" rx="12"/>{[40,75,110,145,160].map((x,i)=><g key={i}><circle cx={x} cy={70+i*8-Math.abs(i-2)*12} r={14+i*2} fill="#16a34a" opacity={0.15+i*0.05}/><rect x={x-3} y={70+i*8-Math.abs(i-2)*12+10} width="6" height={25+i*3} rx="2" fill="#15803d" opacity={0.4+i*0.1}/></g>)}<text x="100" y="180" textAnchor="middle" fill="#15803d" fontSize="10" fontWeight="700" fontFamily="sans-serif">FOREST</text></svg>);}
+// Image paths (from public/images/ folder)
+const IMG = {
+  hero: "/images/hero-ev.jpg",
+  oil: "/images/oil-refinery.jpg",
+  traffic: "/images/motorcycle-traffic.jpg",
+  skyline: "/images/jakarta-skyline.jpg",
+};
 
-/* ═══ MAIN APP ═══ */
+/* ═══ HOOKS ═══ */
+function useLiveCounter(ps){const[c,sc]=useState(0);useEffect(()=>{const i=setInterval(()=>sc(v=>v+ps),100);return()=>clearInterval(i);},[ps]);return c;}
+function useW(){const[w,sw]=useState(1200);useEffect(()=>{sw(window.innerWidth);const h=()=>sw(window.innerWidth);window.addEventListener("resize",h);return()=>window.removeEventListener("resize",h);},[]);return w;}
+function useCounter(target,active){const[v,sv]=useState(0);useEffect(()=>{if(!active)return;let s=0;const d=Math.max(10,2000/Math.max(1,target));const i=setInterval(()=>{s+=target/Math.ceil(2000/d);if(s>=target){sv(target);clearInterval(i);}else sv(Math.round(s*10)/10);},d);return()=>clearInterval(i);},[target,active]);return v;}
+
+/* ═══ MAIN ═══ */
 export default function App(){
   const[inp,si]=useState({brent:75,usdIdr:15800,passThrough:15,evFleetPct:0.2,timeHorizon:1,avgKmPerBike:8000,subsidyIntensity:1});
   const[pr,spr]=useState(0);
   const[vis,sv]=useState({});
+  const[loaded,setLoaded]=useState(false);
+  const[scrollPct,setScrollPct]=useState(0);
+  const[compareMode,setCmp]=useState(false);
+  const[compareIdx,setCmpIdx]=useState(1);
   const refs=useRef({});
+  const W=useW();
+  const M=W<768;
+  const counter=useLiveCounter(93.8);
+
+  useEffect(()=>{setTimeout(()=>setLoaded(true),1000);},[]);
+  useEffect(()=>{const h=()=>{const d=document.documentElement;setScrollPct(d.scrollTop/(d.scrollHeight-d.clientHeight)*100);};window.addEventListener("scroll",h);return()=>window.removeEventListener("scroll",h);},[]);
 
   const set=useCallback((k,v)=>{si(p=>({...p,[k]:v}));spr(-1);},[]);
   const aply=useCallback(i=>{const p=PR[i];si({brent:p.b,usdIdr:p.u,passThrough:p.p,evFleetPct:p.e,timeHorizon:p.t,avgKmPerBike:p.k,subsidyIntensity:p.s});spr(i);},[]);
 
   const res=useMemo(()=>simulate(inp),[inp]);
   const pol=useMemo(()=>genPol(res,inp),[res,inp]);
-
-  // 10% adoption calcs
+  const cmpRes=useMemo(()=>{const p=PR[compareIdx];return simulate({brent:p.b,usdIdr:p.u,passThrough:p.p,evFleetPct:p.e,timeHorizon:p.t,avgKmPerBike:p.k,subsidyIntensity:p.s});},[compareIdx]);
   const tenPct=useMemo(()=>simulate({...inp,evFleetPct:10}),[inp]);
-  const sav=tenPct.as2;
-  const hospitals=Math.round(sav/0.3);
-  const schools=Math.round(sav/0.015);
-  const tollKm=Math.round(sav/0.25);
-  // CO2 at 10%: gasoline displaced * 2.31 kg CO2/liter
-  const co2_10pct = tenPct.co2; // tons
-  const co2_million = (co2_10pct / 1e6).toFixed(2);
-  // Each mature tree absorbs ~22 kg CO2/year
-  const treesEquiv = Math.round(co2_10pct / 0.022); // thousands scaled below
-  const treesMillions = (treesEquiv / 1e6).toFixed(1);
+  const sav=tenPct.as2, hospitals=Math.round(sav/0.3), schools=Math.round(sav/0.015), tollKm=Math.round(sav/0.25);
+  const co2M=(tenPct.co2/1e6).toFixed(2), treesM=(Math.round(tenPct.co2/0.022)/1e6).toFixed(1);
+
+  const takeaway=res.ov<=2?"No immediate action required. Indonesia can absorb current oil prices.":res.sc>20?`Indonesia spends an additional IDR ${res.sc}T/year on fuel subsidies \u2014 equivalent to ${Math.round(res.sc/0.3)} hospitals that will never be built.`:res.td>3?`Oil import bill increases USD ${res.td}B/year \u2014 money leaving Indonesia that could fund domestic infrastructure and jobs.`:`Moderate pressure building: +IDR ${res.sc}T subsidy, +USD ${res.td}B imports. Manageable today, compounds if oil stays elevated.`;
 
   useEffect(()=>{
-    const obs=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting)sv(p=>({...p,[e.target.dataset.s]:true}));});},{threshold:0.1});
+    const obs=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting)sv(p=>({...p,[e.target.dataset.s]:true}));});},{threshold:0.08});
     Object.values(refs.current).forEach(el=>{if(el)obs.observe(el);});
     return()=>obs.disconnect();
   },[]);
 
   const rf=id=>el=>{if(el){el.dataset.s=id;refs.current[id]=el;}};
-  const an=(id,d=0)=>({style:{opacity:vis[id]?1:0,transform:vis[id]?"translateY(0)":"translateY(40px)",transition:`opacity 0.85s ease ${d}s, transform 0.85s ease ${d}s`}});
+  const an=(id,d=0)=>({style:{opacity:vis[id]?1:0,transform:vis[id]?"translateY(0)":"translateY(36px)",transition:`opacity 0.9s ease ${d}s, transform 0.9s ease ${d}s`}});
 
-  const sc=res.ov<=2.5?"#16a34a":res.ov<=5?"#d97706":res.ov<=7.5?"#ea580c":"#dc2626";
+  const sc2=res.ov<=2.5?"#16a34a":res.ov<=5?"#b45309":res.ov<=7.5?"#c2410c":"#991b1b";
   const sl=res.ov<=2.5?"LOW":res.ov<=5?"MODERATE":res.ov<=7.5?"HIGH":"SEVERE";
-  const sbg=res.ov<=2.5?"#f0fdf4":res.ov<=5?"#fffbeb":res.ov<=7.5?"#fff7ed":"#fef2f2";
+  const sbg2=res.ov<=2.5?"#f0fdf4":res.ov<=5?"#fef9ee":res.ov<=7.5?"#fef3ec":"#fef2f2";
+
+  // Design tokens — vintage-futuristic
+  const T = {
+    bg: "#faf8f3",       // warm cream
+    bg2: "#f5f0e8",      // parchment
+    ink: "#1a1a2e",      // deep ink
+    ink2: "#2d2d44",     // softer ink
+    muted: "#8b8680",    // warm gray
+    muted2: "#b5afa6",   // lighter warm gray
+    border: "#e0dbd2",   // warm border
+    accent: "#06b6d4",   // electric teal
+    accent2: "#0e7490",  // deeper teal
+    amber: "#b45309",
+    red: "#991b1b",
+    green: "#166534",
+    ev: "#06d6a0",       // electric green
+    card: "#fffdf7",     // card white
+  };
 
   function Sl({label,value,onChange,min,max,step,unit,sub}){
     const pc=((value-min)/(max-min))*100;
-    return(<div style={{marginBottom:28}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:8}}><span style={{fontSize:14,fontWeight:600,color:"#1e293b"}}>{label}</span><span style={{fontSize:18,fontWeight:700,color:"#0f172a",fontFamily:"'Space Mono',monospace"}}>{typeof value==="number"?value.toLocaleString():value}{unit}</span></div><input type="range" min={min} max={max} step={step} value={value} onChange={e=>onChange(parseFloat(e.target.value))} style={{width:"100%",height:4,appearance:"none",background:`linear-gradient(to right,#0f172a 0%,#0f172a ${pc}%,#e2e8f0 ${pc}%,#e2e8f0 100%)`,borderRadius:2,outline:"none",cursor:"pointer"}}/><div style={{display:"flex",justifyContent:"space-between",fontSize:11,color:"#94a3b8",marginTop:4}}><span>{min}{unit}</span><span>{max}{unit}</span></div>{sub&&<div style={{fontSize:12,color:"#94a3b8",marginTop:4}}>{sub}</div>}</div>);
+    return(<div style={{marginBottom:24}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:8}}><span style={{fontSize:13,fontWeight:500,color:T.ink2,fontFamily:"'DM Serif Text',serif"}}>{label}</span><span style={{fontSize:17,fontWeight:700,color:T.ink,fontFamily:"'Space Mono',monospace"}}>{typeof value==="number"?value.toLocaleString():value}{unit}</span></div><input type="range" min={min} max={max} step={step} value={value} onChange={e=>onChange(parseFloat(e.target.value))} style={{width:"100%",height:5,appearance:"none",background:`linear-gradient(to right,${T.accent} 0%,${T.accent} ${pc}%,${T.border} ${pc}%,${T.border} 100%)`,borderRadius:3,outline:"none",cursor:"pointer"}}/><div style={{display:"flex",justifyContent:"space-between",fontSize:10,color:T.muted2,marginTop:4}}><span>{min}{unit}</span><span>{max}{unit}</span></div>{sub&&<div style={{fontSize:11,color:T.muted,marginTop:4}}>{sub}</div>}</div>);
   }
-  function PB2({label,value}){
-    const pc=Math.min(100,(value/10)*100);const c=value<=2.5?"#16a34a":value<=5?"#d97706":value<=7.5?"#ea580c":"#dc2626";
-    return(<div style={{marginBottom:16}}><div style={{display:"flex",justifyContent:"space-between",marginBottom:6}}><span style={{fontSize:13,color:"#475569"}}>{label}</span><span style={{fontSize:13,fontWeight:700,color:c,fontFamily:"'Space Mono',monospace"}}>{(Math.round(value*10)/10).toFixed(1)}</span></div><div style={{height:6,background:"#f1f5f9",borderRadius:3,overflow:"hidden"}}><div style={{width:`${pc}%`,height:"100%",background:c,borderRadius:3,transition:"width 0.7s ease"}}/></div></div>);
-  }
-  function Met({label,value,unit,note,good}){
-    return(<div style={{padding:"24px 28px",borderRadius:16,background:"#fff",border:"1px solid #e2e8f0"}}><div style={{fontSize:11,color:"#94a3b8",textTransform:"uppercase",letterSpacing:1.5,marginBottom:8}}>{label}</div><div style={{fontSize:34,fontWeight:800,color:"#0f172a",fontFamily:"'Space Mono',monospace",lineHeight:1.1}}>{value}</div><div style={{fontSize:13,color:"#64748b",marginTop:4}}>{unit}</div>{note&&<div style={{fontSize:12,color:good?"#16a34a":"#dc2626",fontWeight:600,marginTop:8}}>{note}</div>}</div>);
-  }
+  function PBar({label,value}){const pc=Math.min(100,(value/10)*100);const c=value<=2.5?T.green:value<=5?T.amber:value<=7.5?"#c2410c":T.red;return(<div style={{marginBottom:16}}><div style={{display:"flex",justifyContent:"space-between",marginBottom:5}}><span style={{fontSize:13,color:T.ink2}}>{label}</span><span style={{fontSize:13,fontWeight:700,color:c,fontFamily:"'Space Mono',monospace"}}>{(Math.round(value*10)/10).toFixed(1)}</span></div><div style={{height:8,background:T.border,borderRadius:4,overflow:"hidden"}}><div style={{width:`${pc}%`,height:"100%",background:c,borderRadius:4,transition:"width 0.8s cubic-bezier(.4,0,.2,1)"}}/></div></div>);}
+  function Met({label,value,unit,note,good}){return(<div style={{padding:M?"18px":"24px 28px",borderRadius:14,background:T.card,border:`1px solid ${T.border}`,boxShadow:"0 1px 3px rgba(26,26,46,0.04)"}}><div style={{fontSize:10,color:T.muted,textTransform:"uppercase",letterSpacing:1.5,marginBottom:8,fontFamily:"'Space Mono',monospace"}}>{label}</div><div style={{fontSize:M?24:32,fontWeight:700,color:T.ink,fontFamily:"'Space Mono',monospace",lineHeight:1.1}}>{value}</div><div style={{fontSize:11,color:T.muted,marginTop:4}}>{unit}</div>{note&&<div style={{fontSize:11,color:good?T.green:T.red,fontWeight:600,marginTop:6}}>{note}</div>}</div>);}
+
+  // Loading
+  if(!loaded)return(
+    <div style={{height:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",background:T.bg,fontFamily:"'DM Serif Text',serif"}}>
+      <div style={{fontSize:28,fontWeight:400,color:T.ink,letterSpacing:-0.5,marginBottom:8}}>Indonesia Macro-EV</div>
+      <div style={{fontSize:13,color:T.muted,fontFamily:"'Space Mono',monospace",marginBottom:24}}>Loading simulation engine...</div>
+      <div style={{width:40,height:40,border:`2px solid ${T.border}`,borderTop:`2px solid ${T.accent}`,borderRadius:"50%",animation:"spin 0.9s linear infinite"}}/>
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+      <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Text:ital@0;1&family=Space+Mono:wght@400;700&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+    </div>
+  );
 
   return(
-    <div style={{background:"#fff",color:"#0f172a",fontFamily:"'Instrument Sans','SF Pro Display',-apple-system,sans-serif",overflowX:"hidden"}}>
-      <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
-      <style>{`input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:#0f172a;cursor:pointer;border:3px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,0.2)}input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:#0f172a;cursor:pointer;border:3px solid #fff}*{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth}`}</style>
+    <div style={{background:T.bg,color:T.ink,fontFamily:"'Instrument Sans',-apple-system,sans-serif",overflowX:"hidden",position:"relative"}}>
+      <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Text:ital@0;1&family=Space+Mono:wght@400;700&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+      <style>{`
+        input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:${T.accent};cursor:pointer;border:3px solid ${T.bg};box-shadow:0 2px 8px rgba(6,182,212,0.3)}
+        input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:${T.accent};cursor:pointer;border:3px solid ${T.bg}}
+        *{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth}
+        .grain{position:relative}.grain::before{content:'';position:absolute;inset:0;opacity:0.03;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");pointer-events:none;z-index:1}
+      `}</style>
+
+      {/* Scroll progress */}
+      <div style={{position:"fixed",top:0,left:0,width:`${scrollPct}%`,height:3,background:`linear-gradient(90deg,${T.accent},${T.ev})`,zIndex:9999,transition:"width 0.1s"}}/>
 
       {/* ═══ HERO ═══ */}
-      <section ref={rf("hero")} style={{minHeight:"100vh",display:"flex",flexDirection:"column",justifyContent:"center",alignItems:"center",textAlign:"center",padding:"60px 24px",background:"linear-gradient(180deg,#f8fafc 0%,#fff 100%)"}}>
-        <div {...an("hero")}>
-          <div style={{fontSize:13,fontWeight:600,color:"#94a3b8",textTransform:"uppercase",letterSpacing:5,marginBottom:28}}>Indonesia Macro Simulation</div>
-          <h1 style={{fontSize:"clamp(38px,6.5vw,76px)",fontWeight:800,lineHeight:1.02,color:"#0f172a",maxWidth:820,letterSpacing:-3}}>How oil prices shape<br/>Indonesia's economy.</h1>
-          <p style={{fontSize:"clamp(16px,2vw,20px)",color:"#64748b",maxWidth:540,marginTop:28,lineHeight:1.65}}>An interactive decision-support tool for policy makers and investors. Simulate oil shocks and discover how EV 2-wheelers build macro resilience.</p>
-          <div style={{marginTop:44,display:"flex",gap:14,flexWrap:"wrap",justifyContent:"center"}}>
-            <button onClick={()=>document.getElementById("sim")?.scrollIntoView({behavior:"smooth"})} style={{padding:"15px 36px",borderRadius:30,background:"#0f172a",color:"#fff",fontSize:15,fontWeight:600,border:"none",cursor:"pointer"}}>Start Simulation</button>
-            <button onClick={()=>document.getElementById("why")?.scrollIntoView({behavior:"smooth"})} style={{padding:"15px 36px",borderRadius:30,background:"transparent",color:"#0f172a",fontSize:15,fontWeight:600,border:"1.5px solid #cbd5e1",cursor:"pointer"}}>Learn More</button>
+      <section ref={rf("hero")} className="grain" style={{minHeight:"100vh",display:"flex",flexDirection:"column",justifyContent:"center",alignItems:"center",textAlign:"center",padding:M?"40px 20px":"60px 24px",position:"relative",overflow:"hidden",background:`linear-gradient(180deg,${T.bg} 0%,${T.bg2} 100%)`}}>
+        {/* Background image with fallback */}
+        <div style={{position:"absolute",inset:0,backgroundImage:`url(${IMG.hero})`,backgroundSize:"cover",backgroundPosition:"center",opacity:0.08}}/>
+        {/* Decorative circles */}
+        <div style={{position:"absolute",top:M?"-10%":"-15%",right:M?"-20%":"-10%",width:M?400:600,height:M?400:600,borderRadius:"50%",border:`1px solid ${T.border}`,opacity:0.4}}/>
+        <div style={{position:"absolute",bottom:M?"-10%":"-15%",left:M?"-20%":"-10%",width:M?350:500,height:M?350:500,borderRadius:"50%",border:`1px solid ${T.accent}33`,opacity:0.3}}/>
+
+        <div style={{position:"relative",zIndex:2}} {...an("hero")}>
+          <div style={{fontSize:11,fontWeight:600,color:T.muted,textTransform:"uppercase",letterSpacing:8,marginBottom:32,fontFamily:"'Space Mono',monospace"}}>Indonesia Macro Simulation</div>
+          <h1 style={{fontSize:M?"34px":"clamp(44px,6.5vw,78px)",fontWeight:400,lineHeight:1.05,color:T.ink,maxWidth:850,letterSpacing:-2,fontFamily:"'DM Serif Text',serif"}}>
+            How oil prices shape<br/><span style={{color:T.accent}}>Indonesia's</span> economy.
+          </h1>
+          <p style={{fontSize:M?14:18,color:T.muted,maxWidth:500,marginTop:28,lineHeight:1.7}}>An interactive decision-support tool for policy makers and investors. Simulate oil shocks. Discover how EV 2-wheelers build macro resilience.</p>
+
+          {/* Live counter */}
+          <div style={{marginTop:40,padding:"22px 36px",borderRadius:14,background:`${T.card}ee`,border:`1px solid ${T.border}`,backdropFilter:"blur(10px)",display:"inline-block",boxShadow:"0 4px 24px rgba(26,26,46,0.06)"}}>
+            <div style={{fontSize:10,color:T.muted,textTransform:"uppercase",letterSpacing:3,marginBottom:8,fontFamily:"'Space Mono',monospace"}}>Since opening this page, Indonesia has spent</div>
+            <div style={{fontSize:M?28:44,fontWeight:700,color:T.red,fontFamily:"'Space Mono',monospace",letterSpacing:-1}}>${Math.floor(counter).toLocaleString()}</div>
+            <div style={{fontSize:11,color:T.muted2,fontFamily:"'Space Mono',monospace"}}>on oil imports (~$938/second)</div>
+          </div>
+
+          <div style={{marginTop:40,display:"flex",gap:14,flexWrap:"wrap",justifyContent:"center"}}>
+            <button onClick={()=>document.getElementById("sim")?.scrollIntoView({behavior:"smooth"})} style={{padding:"15px 40px",borderRadius:6,background:T.ink,color:T.bg,fontSize:14,fontWeight:600,border:"none",cursor:"pointer",letterSpacing:0.5}}>Start Simulation</button>
+            <button onClick={()=>document.getElementById("why")?.scrollIntoView({behavior:"smooth"})} style={{padding:"15px 40px",borderRadius:6,background:"transparent",color:T.ink,fontSize:14,fontWeight:600,border:`1.5px solid ${T.border}`,cursor:"pointer"}}>Learn More</button>
           </div>
         </div>
       </section>
 
-      {/* ═══ WHY THIS MATTERS ═══ */}
-      <section id="why" ref={rf("why")} style={{padding:"120px 24px",maxWidth:1140,margin:"0 auto"}}>
-        <div {...an("why")} style={{textAlign:"center",marginBottom:72}}>
-          <div style={{fontSize:13,fontWeight:600,color:"#94a3b8",textTransform:"uppercase",letterSpacing:5,marginBottom:16}}>The Challenge</div>
-          <h2 style={{fontSize:"clamp(30px,4.5vw,52px)",fontWeight:800,lineHeight:1.08,color:"#0f172a",letterSpacing:-1.5}}>Indonesia imports more oil<br/>than it produces.</h2>
-          <p style={{fontSize:18,color:"#64748b",maxWidth:580,margin:"24px auto 0",lineHeight:1.7}}>Consuming 1.6 million barrels per day while producing only 580,000. Every dollar increase flows into the trade deficit, the subsidy budget, and the cost of living.</p>
+      {/* ═══ THE CHALLENGE ═══ */}
+      <section id="why" ref={rf("why")} className="grain" style={{padding:M?"80px 20px":"120px 24px",maxWidth:1140,margin:"0 auto"}}>
+        <div {...an("why")} style={{textAlign:"center",marginBottom:M?48:72}}>
+          <div style={{fontSize:11,color:T.muted,textTransform:"uppercase",letterSpacing:6,marginBottom:16,fontFamily:"'Space Mono',monospace"}}>The Challenge</div>
+          <h2 style={{fontSize:M?"28px":"clamp(32px,5vw,56px)",fontWeight:400,lineHeight:1.1,color:T.ink,letterSpacing:-1,fontFamily:"'DM Serif Text',serif"}}>Indonesia imports more oil<br/>than it produces.</h2>
+          <p style={{fontSize:M?14:17,color:T.muted,maxWidth:560,margin:"24px auto 0",lineHeight:1.75}}>Consuming 1.6 million barrels per day while producing only 580,000. Every dollar increase flows into the trade deficit, the subsidy budget, and the cost of living.</p>
         </div>
-        <div {...an("why",0.2)} style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:20}}>
-          {[{num:"1.6M",unit:"barrels / day",desc:"consumed by Indonesia — more than 2.5x domestic production",Svg:OilBarrelSVG},{num:"IDR 713T",unit:"energy subsidies 2024",desc:"with nearly 90% supporting fossil fuels — the largest single budget item",Svg:MoneySVG},{num:"130M",unit:"motorcycles on the road",desc:"the world's 3rd largest fleet — consuming 25-30% of all gasoline sold",Svg:MotorcycleSVG}].map((c,i)=>(
-            <div key={i} {...an("why",0.15+i*0.12)} style={{borderRadius:20,overflow:"hidden",border:"1px solid #e2e8f0",background:"#fff"}}>
-              <div style={{height:180,padding:20}}><c.Svg/></div>
-              <div style={{padding:"4px 24px 28px"}}><div style={{fontSize:38,fontWeight:800,color:"#0f172a",fontFamily:"'Space Mono',monospace",lineHeight:1}}>{c.num}</div><div style={{fontSize:12,color:"#94a3b8",marginTop:4,marginBottom:10,textTransform:"uppercase",letterSpacing:1}}>{c.unit}</div><div style={{fontSize:14,color:"#475569",lineHeight:1.6}}>{c.desc}</div></div>
+        <div {...an("why",0.2)} style={{display:"grid",gridTemplateColumns:M?"1fr":"repeat(3,1fr)",gap:20}}>
+          {[{n:"1.6M",u:"barrels / day",d:"consumed \u2014 2.5x domestic production",bg:"linear-gradient(135deg,#1a1a2e,#2d2d44)"},{n:"IDR 713T",u:"energy subsidies 2024",d:"90% supporting fossil fuels \u2014 largest budget item",bg:"linear-gradient(135deg,#2d2d44,#1a1a2e)"},{n:"130M",u:"motorcycles",d:"world\u2019s 3rd largest fleet, 25-30% of gasoline",bg:`linear-gradient(135deg,${T.accent2},#0a3d4f)`}].map((c,i)=>(
+            <div key={i} {...an("why",0.15+i*0.12)} style={{borderRadius:16,overflow:"hidden",border:`1px solid ${T.border}`,background:T.card,boxShadow:"0 2px 12px rgba(26,26,46,0.06)"}}>
+              <div style={{height:120,background:c.bg,display:"flex",alignItems:"center",justifyContent:"center",position:"relative"}}>
+                {i===0&&<div style={{position:"absolute",inset:0,backgroundImage:`url(${IMG.oil})`,backgroundSize:"cover",backgroundPosition:"center",opacity:0.3}}/>}
+                {i===2&&<div style={{position:"absolute",inset:0,backgroundImage:`url(${IMG.traffic})`,backgroundSize:"cover",backgroundPosition:"center",opacity:0.25}}/>}
+                <span style={{fontSize:42,fontWeight:700,color:"#fff",fontFamily:"'Space Mono',monospace",position:"relative",zIndex:2,textShadow:"0 2px 12px rgba(0,0,0,0.4)"}}>{c.n}</span>
+              </div>
+              <div style={{padding:"16px 22px 24px"}}>
+                <div style={{fontSize:10,color:T.muted,textTransform:"uppercase",letterSpacing:2,marginBottom:8,fontFamily:"'Space Mono',monospace"}}>{c.u}</div>
+                <div style={{fontSize:13,color:T.ink2,lineHeight:1.6}}>{c.d}</div>
+              </div>
             </div>))}
         </div>
       </section>
 
       {/* ═══ BIG STAT ═══ */}
-      <section style={{background:"#0f172a",padding:"80px 24px"}}>
-        <div ref={rf("stat")} style={{maxWidth:900,margin:"0 auto",textAlign:"center"}}>
-          <div {...an("stat")}><div style={{fontSize:"clamp(48px,8vw,88px)",fontWeight:800,color:"#fff",fontFamily:"'Space Mono',monospace",lineHeight:1,letterSpacing:-3}}>$29.6B</div><div style={{fontSize:20,color:"#94a3b8",marginTop:16,maxWidth:600,margin:"16px auto 0",lineHeight:1.6}}>Indonesia's total oil and refined petroleum import bill in 2024 — money flowing out of the economy every year.</div></div>
+      <section className="grain" style={{position:"relative",padding:M?"70px 20px":"100px 24px",overflow:"hidden"}}>
+        <div style={{position:"absolute",inset:0,background:T.ink}}/>
+        <div style={{position:"absolute",inset:0,backgroundImage:`url(${IMG.oil})`,backgroundSize:"cover",backgroundPosition:"center",opacity:0.15}}/>
+        <div ref={rf("stat")} style={{maxWidth:900,margin:"0 auto",textAlign:"center",position:"relative",zIndex:2}}>
+          <div {...an("stat")}>
+            <div style={{fontSize:M?"44px":"clamp(52px,9vw,96px)",fontWeight:700,color:"#fff",fontFamily:"'Space Mono',monospace",lineHeight:1,letterSpacing:-3}}>$29.6<span style={{color:T.accent}}>B</span></div>
+            <div style={{width:60,height:2,background:T.accent,margin:"20px auto"}}/>
+            <div style={{fontSize:M?15:19,color:"#ccc",maxWidth:550,margin:"0 auto",lineHeight:1.65,fontFamily:"'DM Serif Text',serif",fontStyle:"italic"}}>Indonesia's total oil and refined petroleum import bill in 2024 \u2014 money flowing out of the economy every single year.</div>
+          </div>
         </div>
       </section>
 
       {/* ═══ TRANSMISSION ═══ */}
-      <section ref={rf("chain")} style={{padding:"100px 24px",background:"#f8fafc"}}>
-        <div style={{maxWidth:1000,margin:"0 auto",textAlign:"center"}}>
-          <div {...an("chain")}><div style={{fontSize:13,fontWeight:600,color:"#94a3b8",textTransform:"uppercase",letterSpacing:5,marginBottom:16}}>The Transmission Chain</div><h2 style={{fontSize:"clamp(28px,4.5vw,48px)",fontWeight:800,lineHeight:1.08,letterSpacing:-1.5,marginBottom:56}}>From barrel to household.</h2></div>
-          <div {...an("chain",0.15)} style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:16}}>
-            {[{s:"01",t:"Global Oil Price",d:"Brent/ICP benchmark moves",ic:"\uD83D\uDEE2\uFE0F"},{s:"02",t:"Landed Cost in IDR",d:"Crude price x FX rate = domestic cost",ic:"\uD83D\uDCB1"},{s:"03",t:"Government Decision",d:"Absorb via budget or pass to consumers?",ic:"\uD83C\uDFDB\uFE0F"},{s:"04",t:"Fiscal or Inflation",d:"Subsidy burden grows OR prices spike",ic:"\u26A0\uFE0F"},{s:"05",t:"Macro Ripple Effects",d:"Trade deficit widens, IDR weakens",ic:"\uD83C\uDF0A"},{s:"06",t:"EV Mitigation",d:"Electric motorcycles reduce gasoline demand",ic:"\u26A1"}].map((c,i)=>(
-              <div key={i} {...an("chain",0.1+i*0.07)} style={{padding:"28px 20px",borderRadius:16,background:"#fff",border:"1px solid #e2e8f0",textAlign:"center"}}><div style={{fontSize:32,marginBottom:8}}>{c.ic}</div><div style={{fontSize:11,color:"#94a3b8",fontFamily:"'Space Mono',monospace",marginBottom:6}}>{c.s}</div><div style={{fontSize:16,fontWeight:700,color:"#0f172a",marginBottom:6}}>{c.t}</div><div style={{fontSize:12,color:"#64748b",lineHeight:1.5}}>{c.d}</div></div>))}
+      <section ref={rf("chain")} className="grain" style={{padding:M?"80px 20px":"100px 24px",background:T.bg2,position:"relative"}}>
+        <div style={{position:"absolute",inset:0,backgroundImage:`url(${IMG.traffic})`,backgroundSize:"cover",backgroundPosition:"center",opacity:0.04}}/>
+        <div style={{maxWidth:1000,margin:"0 auto",textAlign:"center",position:"relative",zIndex:2}}>
+          <div {...an("chain")}><div style={{fontSize:11,color:T.muted,textTransform:"uppercase",letterSpacing:6,marginBottom:16,fontFamily:"'Space Mono',monospace"}}>Transmission Chain</div><h2 style={{fontSize:M?"26px":"clamp(30px,4.5vw,50px)",fontWeight:400,lineHeight:1.1,letterSpacing:-1,marginBottom:48,fontFamily:"'DM Serif Text',serif",color:T.ink}}>From barrel to household.</h2></div>
+          <div {...an("chain",0.15)} style={{display:"grid",gridTemplateColumns:M?"1fr 1fr":"repeat(6,1fr)",gap:10}}>
+            {[{s:"01",t:"Oil Price",d:"Brent moves",ic:"\uD83D\uDEE2\uFE0F"},{s:"02",t:"Landed Cost",d:"Price \u00D7 FX",ic:"\uD83D\uDCB1"},{s:"03",t:"Govt Decision",d:"Absorb / Pass",ic:"\uD83C\uDFDB\uFE0F"},{s:"04",t:"Fiscal / CPI",d:"Budget or prices",ic:"\u26A0\uFE0F"},{s:"05",t:"Macro Ripple",d:"Trade, IDR, rates",ic:"\uD83C\uDF0A"},{s:"06",t:"EV Offset",d:"Demand reduction",ic:"\u26A1"}].map((c,i)=>(
+              <div key={i} style={{padding:"20px 12px",borderRadius:12,background:T.card,border:`1px solid ${T.border}`,textAlign:"center",boxShadow:"0 1px 4px rgba(26,26,46,0.04)"}}><div style={{fontSize:24,marginBottom:6}}>{c.ic}</div><div style={{fontSize:9,color:T.muted,fontFamily:"'Space Mono',monospace",marginBottom:3}}>{c.s}</div><div style={{fontSize:13,fontWeight:600,color:T.ink,marginBottom:3}}>{c.t}</div><div style={{fontSize:10,color:T.muted,lineHeight:1.4}}>{c.d}</div></div>))}
           </div>
         </div>
       </section>
 
       {/* ═══ SIMULATION ═══ */}
-      <section id="sim" ref={rf("sim")} style={{padding:"100px 24px",maxWidth:1200,margin:"0 auto"}}>
-        <div {...an("sim")} style={{textAlign:"center",marginBottom:56}}>
-          <div style={{fontSize:13,fontWeight:600,color:"#94a3b8",textTransform:"uppercase",letterSpacing:5,marginBottom:16}}>Interactive Simulation</div>
-          <h2 style={{fontSize:"clamp(30px,4.5vw,52px)",fontWeight:800,lineHeight:1.08,color:"#0f172a",letterSpacing:-1.5}}>Adjust. Simulate. Understand.</h2>
+      <section id="sim" ref={rf("sim")} className="grain" style={{padding:M?"80px 16px":"100px 24px",maxWidth:1200,margin:"0 auto"}}>
+        <div {...an("sim")} style={{textAlign:"center",marginBottom:48}}>
+          <div style={{fontSize:11,color:T.muted,textTransform:"uppercase",letterSpacing:6,fontFamily:"'Space Mono',monospace",marginBottom:16}}>Interactive Simulation</div>
+          <h2 style={{fontSize:M?"28px":"clamp(32px,5vw,54px)",fontWeight:400,lineHeight:1.08,color:T.ink,letterSpacing:-1,fontFamily:"'DM Serif Text',serif"}}>Adjust. Simulate. <span style={{color:T.accent}}>Understand.</span></h2>
         </div>
 
-        <div {...an("sim",0.1)} style={{display:"flex",gap:10,justifyContent:"center",flexWrap:"wrap",marginBottom:48}}>
-          {PR.map((p,i)=>(<button key={i} onClick={()=>aply(i)} style={{padding:"10px 22px",borderRadius:24,border:pr===i?"2px solid #0f172a":"1.5px solid #e2e8f0",background:pr===i?"#0f172a":"#fff",color:pr===i?"#fff":"#475569",fontSize:13,fontWeight:600,cursor:"pointer",transition:"all 0.2s"}}>{p.n}</button>))}
+        {/* Presets */}
+        <div {...an("sim",0.1)} style={{display:"flex",gap:8,justifyContent:"center",flexWrap:"wrap",marginBottom:36}}>
+          {PR.map((p,i)=>(<button key={i} onClick={()=>aply(i)} style={{padding:"9px 18px",borderRadius:6,border:pr===i?`2px solid ${T.ink}`:`1px solid ${T.border}`,background:pr===i?T.ink:T.card,color:pr===i?T.bg:T.muted,fontSize:12,fontWeight:600,cursor:"pointer",transition:"all 0.2s",fontFamily:"'Space Mono',monospace"}}>{p.n}</button>))}
+          <button onClick={()=>setCmp(!compareMode)} style={{padding:"9px 18px",borderRadius:6,border:compareMode?`2px solid ${T.accent}`:`1px solid ${T.border}`,background:compareMode?"#ecfeff":T.card,color:compareMode?T.accent2:T.muted,fontSize:12,fontWeight:600,cursor:"pointer",fontFamily:"'Space Mono',monospace"}}>{compareMode?"\u2713 Compare":"Compare"}</button>
         </div>
 
-        <div style={{display:"grid",gridTemplateColumns:"380px 1fr",gap:48,alignItems:"start"}}>
-          <div {...an("sim",0.15)} style={{padding:"32px 28px",borderRadius:20,border:"1px solid #e2e8f0",background:"#fafafa",position:"sticky",top:24}}>
-            <div style={{fontSize:11,color:"#94a3b8",textTransform:"uppercase",letterSpacing:2,marginBottom:24}}>Scenario Inputs</div>
-            <Sl label="Brent Crude Oil" value={inp.brent} onChange={v=>set("brent",v)} min={40} max={150} step={5} unit=" USD/bbl"/>
+        <div style={{display:"grid",gridTemplateColumns:M?"1fr":"360px 1fr",gap:M?24:40,alignItems:"start"}}>
+          {/* Controls */}
+          <div {...an("sim",0.15)} style={{padding:M?"24px 20px":"28px 24px",borderRadius:16,border:`1px solid ${T.border}`,background:T.bg2,position:M?"relative":"sticky",top:24,boxShadow:"0 2px 12px rgba(26,26,46,0.04)"}}>
+            <div style={{fontSize:10,color:T.muted,textTransform:"uppercase",letterSpacing:3,marginBottom:20,fontFamily:"'Space Mono',monospace"}}>Scenario Inputs</div>
+            <Sl label="Brent Crude Oil" value={inp.brent} onChange={v=>set("brent",v)} min={40} max={150} step={5} unit=" $/bbl"/>
             <Sl label="USD/IDR Rate" value={inp.usdIdr} onChange={v=>set("usdIdr",v)} min={14000} max={19000} step={100} unit=""/>
-            <Sl label="Fuel Price Pass-Through" value={inp.passThrough} onChange={v=>set("passThrough",v)} min={0} max={100} step={5} unit="%" sub="0% = govt absorbs all"/>
-            <Sl label="EV 2W Fleet Share" value={inp.evFleetPct} onChange={v=>set("evFleetPct",v)} min={0} max={20} step={0.5} unit="%" sub={`${Math.round(inp.evFleetPct*1.3)}M of 130M motorcycles`}/>
-            <div style={{marginBottom:20}}><div style={{fontSize:14,fontWeight:600,color:"#1e293b",marginBottom:10}}>Time Horizon</div><div style={{display:"flex",gap:8}}>{[1,3,5].map(y=>(<button key={y} onClick={()=>set("timeHorizon",y)} style={{flex:1,padding:"10px",borderRadius:10,border:inp.timeHorizon===y?"2px solid #0f172a":"1.5px solid #e2e8f0",background:inp.timeHorizon===y?"#0f172a":"#fff",color:inp.timeHorizon===y?"#fff":"#64748b",fontSize:14,fontWeight:600,cursor:"pointer"}}>{y}Y</button>))}</div></div>
+            <Sl label="Pass-Through" value={inp.passThrough} onChange={v=>set("passThrough",v)} min={0} max={100} step={5} unit="%" sub="0% = govt absorbs all"/>
+            <Sl label="EV 2W Fleet" value={inp.evFleetPct} onChange={v=>set("evFleetPct",v)} min={0} max={20} step={0.5} unit="%" sub={`${Math.round(inp.evFleetPct*1.3)}M of 130M`}/>
+            <div style={{marginBottom:12}}><div style={{fontSize:13,fontWeight:500,color:T.ink2,marginBottom:8,fontFamily:"'DM Serif Text',serif"}}>Time Horizon</div><div style={{display:"flex",gap:6}}>{[1,3,5].map(y=>(<button key={y} onClick={()=>set("timeHorizon",y)} style={{flex:1,padding:"9px",borderRadius:6,border:inp.timeHorizon===y?`2px solid ${T.accent}`:`1px solid ${T.border}`,background:inp.timeHorizon===y?T.accent:T.card,color:inp.timeHorizon===y?"#fff":T.muted,fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"'Space Mono',monospace"}}>{y}Y</button>))}</div></div>
           </div>
 
+          {/* Results */}
           <div>
-            {/* Stress Gauge */}
-            <div {...an("sim",0.2)} style={{padding:"44px",borderRadius:24,background:sbg,border:`1px solid ${sc}22`,marginBottom:28,textAlign:"center"}}>
-              <div style={{fontSize:12,color:"#94a3b8",textTransform:"uppercase",letterSpacing:2,marginBottom:12}}>Overall Macro Stress</div>
-              <div style={{fontSize:88,fontWeight:800,color:sc,fontFamily:"'Space Mono',monospace",lineHeight:1}}>{res.ov}</div>
-              <div style={{fontSize:16,fontWeight:700,color:sc,letterSpacing:4,marginTop:8,textTransform:"uppercase"}}>{sl}</div>
-              <div style={{fontSize:15,color:"#64748b",marginTop:20,maxWidth:500,margin:"20px auto 0",lineHeight:1.65}}>{pol.hl}</div>
+            {/* Stress */}
+            <div {...an("sim",0.2)} style={{padding:M?"32px 20px":"44px",borderRadius:20,background:sbg2,border:`1.5px solid ${sc2}22`,marginBottom:24,textAlign:"center",position:"relative",overflow:"hidden"}}>
+              <div style={{fontSize:10,color:T.muted,textTransform:"uppercase",letterSpacing:3,marginBottom:12,fontFamily:"'Space Mono',monospace"}}>Macro Stress Level</div>
+              <div style={{fontSize:M?60:88,fontWeight:700,color:sc2,fontFamily:"'Space Mono',monospace",lineHeight:1}}>{res.ov}</div>
+              <div style={{fontSize:14,fontWeight:700,color:sc2,letterSpacing:5,marginTop:8,textTransform:"uppercase",fontFamily:"'Space Mono',monospace"}}>{sl}</div>
+              <div style={{width:40,height:2,background:sc2,margin:"16px auto",opacity:0.4}}/>
+              <div style={{fontSize:M?13:15,color:T.ink2,marginTop:12,maxWidth:480,margin:"12px auto 0",lineHeight:1.65}}>{pol.hl}</div>
             </div>
-            {/* Pressure Channels */}
-            <div {...an("sim",0.3)} style={{padding:"28px 32px",borderRadius:20,border:"1px solid #e2e8f0",marginBottom:28,background:"#fff"}}>
-              <div style={{fontSize:11,color:"#94a3b8",textTransform:"uppercase",letterSpacing:2,marginBottom:20}}>Pressure Channels</div>
-              <PB2 label="Fiscal — Subsidy Burden" value={res.st.fiscal}/><PB2 label="External — Trade & CA Deficit" value={res.st.external}/><PB2 label="Inflation — Consumer Prices" value={res.st.inflation}/><PB2 label="FX — Rupiah Vulnerability" value={res.st.fx}/>
+
+            {/* Key Takeaway */}
+            <div {...an("sim",0.25)} style={{padding:"24px 28px",borderRadius:14,background:T.ink,marginBottom:24,position:"relative",overflow:"hidden"}}>
+              <div style={{position:"absolute",top:0,left:0,width:4,height:"100%",background:T.accent}}/>
+              <div style={{fontSize:10,color:T.accent,textTransform:"uppercase",letterSpacing:3,marginBottom:8,fontFamily:"'Space Mono',monospace"}}>What This Means</div>
+              <div style={{fontSize:M?14:16,color:"#e0dbd2",lineHeight:1.7,fontFamily:"'DM Serif Text',serif",fontStyle:"italic"}}>{takeaway}</div>
             </div>
+
+            {/* Compare */}
+            {compareMode&&<div {...an("sim",0.27)} style={{padding:"24px",borderRadius:14,border:`2px solid ${T.accent}44`,background:"#ecfeff",marginBottom:24}}>
+              <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:14}}>
+                <div style={{fontSize:10,color:T.accent2,fontWeight:700,textTransform:"uppercase",letterSpacing:3,fontFamily:"'Space Mono',monospace"}}>Compare</div>
+                <select value={compareIdx} onChange={e=>setCmpIdx(parseInt(e.target.value))} style={{padding:"6px 10px",borderRadius:6,border:`1px solid ${T.accent}44`,fontSize:12,background:"#fff",color:T.ink,fontFamily:"'Space Mono',monospace"}}>{PR.map((p,i)=><option key={i} value={i}>{p.n}</option>)}</select>
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 50px 1fr",gap:6,fontSize:12}}>
+                <div style={{fontWeight:700,color:T.ink,textAlign:"center",fontFamily:"'Space Mono',monospace",fontSize:11}}>Yours</div><div/><div style={{fontWeight:700,color:T.accent2,textAlign:"center",fontFamily:"'Space Mono',monospace",fontSize:11}}>{PR[compareIdx].n}</div>
+                {[["Stress",res.ov,cmpRes.ov,""],["Subsidy",res.sb,cmpRes.sb,"T"],["Imports",res.ni,cmpRes.ni,"$B"],["CPI",res.ct,cmpRes.ct,"pp"],["EV Save",res.ai,cmpRes.ai,"$B"]].map(([l,a,b,u],i)=>(
+                  <React.Fragment key={i}><div style={{textAlign:"center",padding:"7px 0",background:i%2?`${T.accent}11`:"transparent",borderRadius:4}}><span style={{fontFamily:"'Space Mono',monospace",fontWeight:600}}>{a}</span><span style={{color:T.muted,fontSize:10}}>{u}</span></div><div style={{textAlign:"center",padding:"7px 0",color:T.muted,fontSize:10,display:"flex",alignItems:"center",justifyContent:"center"}}>{l}</div><div style={{textAlign:"center",padding:"7px 0",background:i%2?`${T.accent}11`:"transparent",borderRadius:4}}><span style={{fontFamily:"'Space Mono',monospace",fontWeight:600,color:T.accent2}}>{b}</span><span style={{color:T.muted,fontSize:10}}>{u}</span></div></React.Fragment>
+                ))}
+              </div>
+            </div>}
+
+            {/* Pressure */}
+            <div {...an("sim",0.3)} style={{padding:M?"20px":"28px 32px",borderRadius:16,border:`1px solid ${T.border}`,marginBottom:24,background:T.card,boxShadow:"0 1px 4px rgba(26,26,46,0.04)"}}>
+              <div style={{fontSize:10,color:T.muted,textTransform:"uppercase",letterSpacing:3,marginBottom:16,fontFamily:"'Space Mono',monospace"}}>Pressure Channels</div>
+              <PBar label="Fiscal \u2014 Subsidy Burden" value={res.st.fiscal}/><PBar label="External \u2014 Trade Deficit" value={res.st.external}/><PBar label="Inflation \u2014 Consumer Prices" value={res.st.inflation}/><PBar label="FX \u2014 Rupiah" value={res.st.fx}/>
+            </div>
+
             {/* Metrics */}
-            <div {...an("sim",0.4)} style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:14}}>
-              <Met label="Subsidy Burden" value={res.sb} unit="IDR Trillion/yr" note={res.sc>0?`+${res.sc} vs base`:null}/><Met label="Oil Import Bill" value={res.ni} unit="USD Billion/yr" note={res.td>0?`+${res.td} vs base`:null}/><Met label="Inflation Impact" value={res.ct>0?`+${res.ct}`:"0"} unit="pp CPI"/><Met label="CA Impact" value={res.cp>0?`+${res.cp}`:res.cp} unit="pp GDP"/><Met label="EV Import Savings" value={res.ai} unit="USD Bn/yr" note={res.ai>0.5?"Material":null} good={true}/><Met label="EV Subsidy Savings" value={res.as2} unit="IDR Tn/yr" note={res.as2>5?"Significant":null} good={true}/>
+            <div {...an("sim",0.4)} style={{display:"grid",gridTemplateColumns:M?"1fr 1fr":"repeat(3,1fr)",gap:12}}>
+              <Met label="Subsidy" value={res.sb} unit="IDR Tn/yr" note={res.sc>0?`+${res.sc} vs base`:null}/><Met label="Import Bill" value={res.ni} unit="USD Bn/yr" note={res.td>0?`+${res.td}`:null}/><Met label="Inflation" value={res.ct>0?`+${res.ct}`:"0"} unit="pp CPI"/><Met label="CA Impact" value={res.cp>0?`+${res.cp}`:res.cp} unit="pp GDP"/><Met label="EV Import\u00A0Saved" value={res.ai} unit="USD Bn/yr" note={res.ai>0.5?"Material":null} good={true}/><Met label="EV Sub\u00A0Saved" value={res.as2} unit="IDR Tn/yr" note={res.as2>5?"Significant":null} good={true}/>
             </div>
           </div>
         </div>
       </section>
 
       {/* ═══ EV SECTION ═══ */}
-      <section ref={rf("evh")} style={{padding:"100px 24px",background:"#f0fdf4"}}>
+      <section ref={rf("evh")} className="grain" style={{padding:M?"80px 20px":"100px 24px",background:`linear-gradient(180deg,#ecfdf5,${T.bg})`}}>
         <div style={{maxWidth:900,margin:"0 auto",textAlign:"center"}}>
-          <div {...an("evh")}><div style={{width:200,height:200,margin:"0 auto 32px"}}><MotorcycleSVG/></div><div style={{fontSize:13,fontWeight:600,color:"#16a34a",textTransform:"uppercase",letterSpacing:5,marginBottom:16}}>The EV Solution</div><h2 style={{fontSize:"clamp(28px,4.5vw,48px)",fontWeight:800,lineHeight:1.08,color:"#0f172a",letterSpacing:-1.5}}>Every electric motorcycle<br/>reduces Indonesia's oil exposure.</h2><p style={{fontSize:17,color:"#64748b",maxWidth:540,margin:"20px auto 0",lineHeight:1.65}}>Not just a climate solution. A structural macro-resilience tool that cuts imports, subsidies, and trade deficits simultaneously.</p></div>
+          <div {...an("evh")}>
+            <div style={{fontSize:48,marginBottom:16}}>{"\u26A1"}</div>
+            <div style={{fontSize:11,color:T.green,textTransform:"uppercase",letterSpacing:6,marginBottom:16,fontFamily:"'Space Mono',monospace"}}>The EV Solution</div>
+            <h2 style={{fontSize:M?"26px":"clamp(30px,5vw,50px)",fontWeight:400,lineHeight:1.1,color:T.ink,letterSpacing:-1,fontFamily:"'DM Serif Text',serif"}}>Every electric motorcycle<br/>reduces Indonesia's <span style={{color:T.accent}}>oil exposure</span>.</h2>
+            <p style={{fontSize:M?14:16,color:T.muted,maxWidth:500,margin:"20px auto 0",lineHeight:1.7}}>Not just climate. A structural macro-resilience tool that cuts imports, subsidies, and trade deficits simultaneously.</p>
+          </div>
         </div>
       </section>
 
       {/* ═══ EV TABLE ═══ */}
-      <section ref={rf("evt")} style={{padding:"60px 24px 100px",maxWidth:1000,margin:"0 auto"}}>
-        <div {...an("evt")} style={{borderRadius:20,overflow:"hidden",border:"1px solid #dcfce7",background:"#fff"}}>
-          <div style={{padding:"28px 32px"}}><div style={{fontSize:11,color:"#94a3b8",textTransform:"uppercase",letterSpacing:2,marginBottom:20}}>EV Impact at Different Adoption Levels (Brent ${inp.brent}/bbl)</div>
-            <table style={{width:"100%",borderCollapse:"collapse"}}><thead><tr style={{borderBottom:"2px solid #e2e8f0"}}>{["Fleet Share","Units","Gasoline Displaced","Import Savings","Subsidy Savings","CO2 Reduced"].map(h=>(<th key={h} style={{textAlign:"left",padding:"10px 12px",fontSize:11,color:"#94a3b8",fontWeight:600,textTransform:"uppercase",letterSpacing:1}}>{h}</th>))}</tr></thead>
-            <tbody>{[0.2,1,3,5,8,10,15].map((pct,i)=>{const s=simulate({...inp,evFleetPct:pct});const cur=Math.abs(pct-inp.evFleetPct)<0.3;return(<tr key={pct} style={{borderBottom:"1px solid #f1f5f9",background:cur?"#f0fdf4":i%2===1?"#fafafa":"#fff"}}><td style={{padding:"12px",fontSize:14,fontWeight:cur?700:500,color:cur?"#16a34a":"#0f172a"}}>{pct}%{cur?" \u2190":""}</td><td style={{padding:"12px",fontSize:14,color:"#475569",fontFamily:"'Space Mono',monospace"}}>{Math.round(pct*1.3)}M</td><td style={{padding:"12px",fontSize:14,color:"#475569",fontFamily:"'Space Mono',monospace"}}>{s.dp} Bn L</td><td style={{padding:"12px",fontSize:14,color:"#16a34a",fontWeight:600,fontFamily:"'Space Mono',monospace"}}>USD {s.ai} Bn</td><td style={{padding:"12px",fontSize:14,color:"#16a34a",fontWeight:600,fontFamily:"'Space Mono',monospace"}}>IDR {s.as2} Tn</td><td style={{padding:"12px",fontSize:14,color:"#16a34a",fontWeight:600,fontFamily:"'Space Mono',monospace"}}>{(s.co2/1e6).toFixed(2)}M tons</td></tr>);})}</tbody></table>
+      <section ref={rf("evt")} style={{padding:M?"40px 16px 80px":"60px 24px 100px",maxWidth:1000,margin:"0 auto"}}>
+        <div {...an("evt")} style={{borderRadius:16,overflow:"hidden",border:`1px solid ${T.border}`,background:T.card,boxShadow:"0 2px 12px rgba(26,26,46,0.04)",overflowX:"auto"}}>
+          <div style={{padding:M?"20px":"24px 28px",minWidth:580}}>
+            <div style={{fontSize:10,color:T.muted,textTransform:"uppercase",letterSpacing:3,marginBottom:14,fontFamily:"'Space Mono',monospace"}}>EV Impact by Adoption Level (Brent ${inp.brent}/bbl)</div>
+            <table style={{width:"100%",borderCollapse:"collapse"}}><thead><tr style={{borderBottom:`2px solid ${T.border}`}}>{["Share","Units","Gas Cut","Import\u00A0Save","Sub\u00A0Save","CO2\u00A0Cut"].map(h=>(<th key={h} style={{textAlign:"left",padding:"8px 8px",fontSize:9,color:T.muted,fontWeight:600,textTransform:"uppercase",letterSpacing:1,fontFamily:"'Space Mono',monospace"}}>{h}</th>))}</tr></thead>
+            <tbody>{[0.2,1,3,5,8,10,15].map((pct,i)=>{const s=simulate({...inp,evFleetPct:pct});const cur=Math.abs(pct-inp.evFleetPct)<0.3;return(<tr key={pct} style={{borderBottom:`1px solid ${T.border}44`,background:cur?"#ecfdf5":i%2===1?T.bg2:"transparent"}}><td style={{padding:"10px 8px",fontSize:13,fontWeight:cur?700:400,color:cur?T.green:T.ink,fontFamily:"'Space Mono',monospace"}}>{pct}%{cur?" \u2190":""}</td><td style={{padding:"10px 8px",fontSize:12,color:T.muted,fontFamily:"'Space Mono',monospace"}}>{Math.round(pct*1.3)}M</td><td style={{padding:"10px 8px",fontSize:12,color:T.ink2,fontFamily:"'Space Mono',monospace"}}>{s.dp}B L</td><td style={{padding:"10px 8px",fontSize:12,color:T.green,fontWeight:600,fontFamily:"'Space Mono',monospace"}}>${s.ai}B</td><td style={{padding:"10px 8px",fontSize:12,color:T.green,fontWeight:600,fontFamily:"'Space Mono',monospace"}}>Rp{s.as2}T</td><td style={{padding:"10px 8px",fontSize:12,color:T.green,fontWeight:600,fontFamily:"'Space Mono',monospace"}}>{(s.co2/1e6).toFixed(1)}Mt</td></tr>);})}</tbody></table>
           </div>
         </div>
       </section>
 
       {/* ═══ FISCAL DIVIDEND ═══ */}
-      <section ref={rf("bld")} style={{padding:"100px 24px",background:"#fff"}}>
-        <div style={{maxWidth:1100,margin:"0 auto"}}>
-          <div {...an("bld")} style={{textAlign:"center",marginBottom:64}}>
-            <div style={{fontSize:13,fontWeight:600,color:"#16a34a",textTransform:"uppercase",letterSpacing:5,marginBottom:16}}>The Fiscal Dividend</div>
-            <h2 style={{fontSize:"clamp(28px,4.5vw,48px)",fontWeight:800,lineHeight:1.08,color:"#0f172a",letterSpacing:-1.5}}>What IDR {sav} Trillion<br/>in annual savings could build.</h2>
-            <p style={{fontSize:17,color:"#64748b",maxWidth:600,margin:"20px auto 0",lineHeight:1.65}}>At 10% EV motorcycle adoption and Brent at USD {inp.brent}/bbl, the avoided fuel subsidy alone could fund transformative public investment every single year.</p>
+      <section ref={rf("bld")} className="grain" style={{padding:M?"80px 20px":"100px 24px",background:T.bg,position:"relative"}}>
+        <div style={{position:"absolute",inset:0,backgroundImage:`url(${IMG.skyline})`,backgroundSize:"cover",backgroundPosition:"center top",opacity:0.04}}/>
+        <div style={{maxWidth:1100,margin:"0 auto",position:"relative",zIndex:2}}>
+          <div {...an("bld")} style={{textAlign:"center",marginBottom:56}}>
+            <div style={{fontSize:11,color:T.green,textTransform:"uppercase",letterSpacing:6,marginBottom:16,fontFamily:"'Space Mono',monospace"}}>Fiscal Dividend</div>
+            <h2 style={{fontSize:M?"26px":"clamp(30px,5vw,50px)",fontWeight:400,lineHeight:1.1,color:T.ink,letterSpacing:-1,fontFamily:"'DM Serif Text',serif"}}>What IDR {sav} Trillion<br/>could <span style={{color:T.accent}}>build</span> every year.</h2>
           </div>
-          <div {...an("bld",0.15)} style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:24}}>
-            {[{num:hospitals,label:"Regional Hospitals",desc:`At ~IDR 300 billion per facility, the savings could fund ${hospitals} new regional hospitals annually — expanding healthcare access across the archipelago.`,Svg:HospitalSVG,color:"#0ea5e9"},{num:schools.toLocaleString(),label:"Elementary Schools",desc:`At ~IDR 15 billion per school, ${schools.toLocaleString()} new elementary schools — transforming education infrastructure nationwide.`,Svg:SchoolSVG,color:"#8b5cf6"},{num:`${tollKm} km`,label:"Toll Road",desc:`At ~IDR 250 billion per km, ${tollKm} km of new toll road — improving connectivity and logistics efficiency.`,Svg:RoadSVG,color:"#f59e0b"}].map((c,i)=>(
-              <div key={i} {...an("bld",0.2+i*0.1)} style={{borderRadius:20,overflow:"hidden",background:"#fff",border:"1px solid #e2e8f0"}}><div style={{height:180,padding:16}}><c.Svg/></div><div style={{padding:"8px 28px 32px"}}><div style={{fontSize:52,fontWeight:800,color:c.color,fontFamily:"'Space Mono',monospace",lineHeight:1}}>{c.num}</div><div style={{fontSize:14,fontWeight:700,color:"#0f172a",marginTop:8,marginBottom:10}}>{c.label}</div><div style={{fontSize:13,color:"#64748b",lineHeight:1.65}}>{c.desc}</div></div></div>))}
+          <div {...an("bld",0.15)} style={{display:"grid",gridTemplateColumns:M?"1fr":"repeat(3,1fr)",gap:20}}>
+            {[{n:hospitals,l:"Hospitals",d:`At ~IDR 300B each \u2014 healthcare across the archipelago.`,c:"#0369a1"},{n:schools.toLocaleString(),l:"Schools",d:`At ~IDR 15B each \u2014 education infrastructure nationwide.`,c:"#7c3aed"},{n:`${tollKm}km`,l:"Toll Road",d:`At ~IDR 250B/km \u2014 connectivity and logistics.`,c:T.amber}].map((c,i)=>(
+              <div key={i} {...an("bld",0.2+i*0.1)} style={{borderRadius:16,background:T.card,border:`1px solid ${T.border}`,padding:"32px 24px",textAlign:"center",boxShadow:"0 2px 12px rgba(26,26,46,0.04)"}}>
+                <div style={{fontSize:M?40:56,fontWeight:700,color:c.c,fontFamily:"'Space Mono',monospace",lineHeight:1}}>{c.n}</div>
+                <div style={{fontSize:14,fontWeight:600,color:T.ink,marginTop:8,marginBottom:8,fontFamily:"'DM Serif Text',serif"}}>{c.l}</div>
+                <div style={{fontSize:12,color:T.muted,lineHeight:1.6}}>{c.d}</div>
+              </div>))}
           </div>
-          <div {...an("bld",0.5)} style={{textAlign:"center",marginTop:48,padding:"28px 36px",borderRadius:16,background:"#f0fdf4",border:"1px solid #dcfce7",maxWidth:720,margin:"48px auto 0"}}>
-            <div style={{fontSize:17,color:"#334155",lineHeight:1.75}}>Every IDR trillion on fuel subsidies is an IDR trillion <em>not</em> spent on hospitals, schools, and roads. EV adoption doesn't just reduce oil dependence — <strong style={{color:"#16a34a"}}>it unlocks fiscal space for development.</strong></div>
-          </div>
-        </div>
-      </section>
-
-      {/* ═══ ENVIRONMENTAL IMPACT — NEW ═══ */}
-      <section ref={rf("env")} style={{padding:"100px 24px",background:"#ecfdf5"}}>
-        <div style={{maxWidth:1100,margin:"0 auto"}}>
-          <div {...an("env")} style={{textAlign:"center",marginBottom:64}}>
-            <div style={{fontSize:13,fontWeight:600,color:"#15803d",textTransform:"uppercase",letterSpacing:5,marginBottom:16}}>Environmental Impact</div>
-            <h2 style={{fontSize:"clamp(28px,4.5vw,48px)",fontWeight:800,lineHeight:1.08,color:"#0f172a",letterSpacing:-1.5}}>Cleaner air. Lower emissions.<br/>A greener Indonesia.</h2>
-            <p style={{fontSize:17,color:"#64748b",maxWidth:600,margin:"20px auto 0",lineHeight:1.65}}>At 10% EV motorcycle adoption, the gasoline no longer burned translates directly into massive CO2 reduction — equivalent to planting millions of trees.</p>
-          </div>
-          <div {...an("env",0.15)} style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:24}}>
-            <div style={{borderRadius:20,overflow:"hidden",background:"#fff",border:"1px solid #bbf7d0"}}>
-              <div style={{height:180,padding:16}}><CO2SVG/></div>
-              <div style={{padding:"8px 28px 32px"}}>
-                <div style={{fontSize:52,fontWeight:800,color:"#16a34a",fontFamily:"'Space Mono',monospace",lineHeight:1}}>{co2_million}M</div>
-                <div style={{fontSize:14,fontWeight:700,color:"#0f172a",marginTop:8,marginBottom:10}}>Tons of CO2 Reduced per Year</div>
-                <div style={{fontSize:13,color:"#64748b",lineHeight:1.65}}>Each liter of gasoline burned produces 2.31 kg of CO2. At 10% EV fleet share ({tenPct.evM}M motorcycles), approximately {tenPct.dp} billion liters of gasoline are no longer burned annually — preventing {co2_million} million tons of CO2 from entering the atmosphere every year.</div>
-              </div>
-            </div>
-            <div style={{borderRadius:20,overflow:"hidden",background:"#fff",border:"1px solid #bbf7d0"}}>
-              <div style={{height:180,padding:16}}><TreeSVG/></div>
-              <div style={{padding:"8px 28px 32px"}}>
-                <div style={{fontSize:52,fontWeight:800,color:"#15803d",fontFamily:"'Space Mono',monospace",lineHeight:1}}>{treesMillions}M</div>
-                <div style={{fontSize:14,fontWeight:700,color:"#0f172a",marginTop:8,marginBottom:10}}>Trees Equivalent Planted per Year</div>
-                <div style={{fontSize:13,color:"#64748b",lineHeight:1.65}}>A mature tree absorbs approximately 22 kg of CO2 per year. The CO2 reduction from 10% EV adoption is equivalent to planting {treesMillions} million mature trees — roughly {Math.round(parseFloat(treesMillions)*10)/10}x the total trees in Jakarta's entire urban forest. Every year, automatically, as long as the EVs are on the road.</div>
-              </div>
-            </div>
-          </div>
-          <div {...an("env",0.4)} style={{textAlign:"center",marginTop:48,padding:"28px 36px",borderRadius:16,background:"#fff",border:"1px solid #bbf7d0",maxWidth:720,margin:"48px auto 0"}}>
-            <div style={{fontSize:17,color:"#334155",lineHeight:1.75}}>This is not a one-time benefit. Unlike tree planting, which takes decades to reach full absorption, <strong style={{color:"#15803d"}}>EV gasoline displacement delivers immediate, compounding, and permanent emission reductions</strong> — every year the motorcycles are on the road.</div>
+          <div {...an("bld",0.5)} style={{textAlign:"center",marginTop:40,padding:"24px 28px",borderRadius:12,background:T.card,border:`1px solid ${T.border}`,maxWidth:650,margin:"40px auto 0"}}>
+            <div style={{fontSize:M?14:16,color:T.ink2,lineHeight:1.75,fontFamily:"'DM Serif Text',serif",fontStyle:"italic"}}>Every IDR trillion on subsidies is an IDR trillion <em>not</em> spent on hospitals, schools, and roads. <strong style={{fontStyle:"normal",color:T.accent2}}>EV adoption unlocks fiscal space for development.</strong></div>
           </div>
         </div>
       </section>
 
-      {/* ═══ POLICY BRIEF — ENHANCED ═══ */}
-      <section ref={rf("pol")} style={{padding:"100px 24px",background:"#f8fafc"}}>
-        <div style={{maxWidth:840,margin:"0 auto"}}>
-          <div {...an("pol")} style={{textAlign:"center",marginBottom:56}}>
-            <div style={{fontSize:13,fontWeight:600,color:"#94a3b8",textTransform:"uppercase",letterSpacing:5,marginBottom:16}}>Auto-Generated</div>
-            <h2 style={{fontSize:"clamp(28px,4.5vw,48px)",fontWeight:800,lineHeight:1.08,color:"#0f172a",letterSpacing:-1.5}}>Policy Brief</h2>
-            <p style={{fontSize:14,color:"#94a3b8",marginTop:12}}>Brent ${inp.brent}/bbl · IDR {inp.usdIdr.toLocaleString()} · {inp.passThrough}% pass-through · {inp.evFleetPct}% EV · {inp.timeHorizon}Y</p>
+      {/* ═══ ENVIRONMENTAL ═══ */}
+      <section ref={rf("env")} className="grain" style={{padding:M?"80px 20px":"100px 24px",background:"linear-gradient(180deg,#ecfdf5,#f0fdf4)"}}>
+        <div style={{maxWidth:900,margin:"0 auto"}}>
+          <div {...an("env")} style={{textAlign:"center",marginBottom:48}}>
+            <div style={{fontSize:11,color:T.green,textTransform:"uppercase",letterSpacing:6,marginBottom:16,fontFamily:"'Space Mono',monospace"}}>Environmental Impact</div>
+            <h2 style={{fontSize:M?"26px":"clamp(30px,5vw,48px)",fontWeight:400,lineHeight:1.1,color:T.ink,letterSpacing:-1,fontFamily:"'DM Serif Text',serif"}}>Cleaner air. <span style={{color:T.green}}>Greener</span> Indonesia.</h2>
+          </div>
+          <div {...an("env",0.15)} style={{display:"grid",gridTemplateColumns:M?"1fr":"1fr 1fr",gap:20}}>
+            <div style={{borderRadius:16,background:T.card,border:`1px solid #bbf7d0`,padding:"32px 28px",textAlign:"center",boxShadow:"0 2px 12px rgba(22,101,52,0.06)"}}>
+              <div style={{fontSize:M?40:56,fontWeight:700,color:T.green,fontFamily:"'Space Mono',monospace",lineHeight:1}}>{co2M}M</div>
+              <div style={{fontSize:14,fontWeight:600,color:T.ink,marginTop:8,marginBottom:8,fontFamily:"'DM Serif Text',serif"}}>Tons CO2 Reduced / Year</div>
+              <div style={{fontSize:12,color:T.muted,lineHeight:1.6}}>Each liter = 2.31 kg CO2. At 10% EV share, {tenPct.dp}B liters not burned annually.</div>
+            </div>
+            <div style={{borderRadius:16,background:T.card,border:`1px solid #bbf7d0`,padding:"32px 28px",textAlign:"center",boxShadow:"0 2px 12px rgba(22,101,52,0.06)"}}>
+              <div style={{fontSize:M?40:56,fontWeight:700,color:"#15803d",fontFamily:"'Space Mono',monospace",lineHeight:1}}>{treesM}M</div>
+              <div style={{fontSize:14,fontWeight:600,color:T.ink,marginTop:8,marginBottom:8,fontFamily:"'DM Serif Text',serif"}}>Trees Equivalent / Year</div>
+              <div style={{fontSize:12,color:T.muted,lineHeight:1.6}}>A tree absorbs ~22 kg CO2/yr. Equivalent to planting {treesM}M trees \u2014 permanently.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══ POLICY BRIEF ═══ */}
+      <section ref={rf("pol")} className="grain" style={{padding:M?"80px 16px":"100px 24px",background:T.bg2}}>
+        <div style={{maxWidth:800,margin:"0 auto"}}>
+          <div {...an("pol")} style={{textAlign:"center",marginBottom:48}}>
+            <div style={{fontSize:11,color:T.muted,textTransform:"uppercase",letterSpacing:6,fontFamily:"'Space Mono',monospace",marginBottom:16}}>Auto-Generated</div>
+            <h2 style={{fontSize:M?"28px":"clamp(30px,5vw,48px)",fontWeight:400,lineHeight:1.1,color:T.ink,letterSpacing:-1,fontFamily:"'DM Serif Text',serif"}}>Policy Brief</h2>
+            <p style={{fontSize:11,color:T.muted,marginTop:10,fontFamily:"'Space Mono',monospace"}}>${inp.brent}/bbl \u00B7 IDR {inp.usdIdr.toLocaleString()} \u00B7 {inp.passThrough}%PT \u00B7 {inp.evFleetPct}%EV \u00B7 {inp.timeHorizon}Y</p>
           </div>
           <div {...an("pol",0.1)}>
             {/* Assessment */}
-            <div style={{padding:"32px",borderRadius:20,border:`1.5px solid ${sc}33`,background:sbg,marginBottom:20}}>
-              <div style={{fontSize:11,color:"#94a3b8",textTransform:"uppercase",letterSpacing:2,marginBottom:12}}>Situation Assessment</div>
-              <div style={{fontSize:18,color:"#0f172a",lineHeight:1.7,fontWeight:500}}>{pol.hl}</div>
+            <div style={{padding:M?"24px 20px":"32px",borderRadius:16,border:`1.5px solid ${sc2}33`,background:sbg2,marginBottom:16}}><div style={{fontSize:10,color:T.muted,textTransform:"uppercase",letterSpacing:3,marginBottom:10,fontFamily:"'Space Mono',monospace"}}>Assessment</div><div style={{fontSize:M?15:18,color:T.ink,lineHeight:1.7,fontFamily:"'DM Serif Text',serif"}}>{pol.hl}</div></div>
+
+            {[{t:"1st Order \u2014 Economic",items:pol.first,bg:T.card,br:"#fecaca",dot:T.red,tc:"#7f1d1d"},
+              {t:"2nd Order \u2014 Social & Political",items:pol.second,bg:"#fef9ee",br:"#fde68a",dot:T.amber,tc:"#78350f"},
+              {t:"Why Now",items:pol.whyNow,bg:"#eff6ff",br:"#93c5fd",dot:"#1d4ed8",tc:"#1e3a5f"},
+              {t:"What If Not",items:pol.whatIfNot,bg:T.ink,br:"#334155",dot:"#ef4444",tc:"#f87171"}
+            ].map((s,si)=>(
+              <div key={si} style={{padding:M?"22px 18px":"28px 32px",borderRadius:14,border:`1px solid ${s.br}`,background:s.bg,marginBottom:12}}>
+                <div style={{fontSize:10,color:s.tc,textTransform:"uppercase",letterSpacing:3,marginBottom:12,fontWeight:700,fontFamily:"'Space Mono',monospace"}}>{s.t}</div>
+                {s.items.map((t,i)=><div key={i} style={{display:"flex",gap:10,marginBottom:10}}><div style={{width:6,height:6,borderRadius:"50%",background:s.dot,marginTop:6,flexShrink:0}}/><div style={{fontSize:13,color:s.bg===T.ink?"#cbd5e1":T.ink2,lineHeight:1.65}}>{t}</div></div>)}
+              </div>
+            ))}
+
+            <div style={{padding:M?"22px 18px":"28px 32px",borderRadius:14,border:`1px solid ${T.border}`,background:T.card,marginBottom:12}}>
+              <div style={{fontSize:10,color:T.muted,textTransform:"uppercase",letterSpacing:3,marginBottom:12,fontFamily:"'Space Mono',monospace"}}>Recommended Actions</div>
+              {pol.rc.map((r,i)=><div key={i} style={{display:"flex",gap:12,marginBottom:12}}><div style={{width:22,height:22,borderRadius:"50%",background:T.bg2,color:T.ink,fontSize:11,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,fontFamily:"'Space Mono',monospace"}}>{i+1}</div><div style={{fontSize:13,color:T.ink2,lineHeight:1.6}}>{r}</div></div>)}
             </div>
 
-            {/* 1st Order */}
-            <div style={{padding:"32px",borderRadius:20,border:"1px solid #e2e8f0",background:"#fff",marginBottom:20}}>
-              <div style={{fontSize:11,color:"#dc2626",textTransform:"uppercase",letterSpacing:2,marginBottom:16,fontWeight:700}}>1st Order Impact — Direct Economic</div>
-              {pol.first.map((t,i) => (
-                <div key={i} style={{display:"flex",gap:12,marginBottom:14,alignItems:"flex-start"}}>
-                  <div style={{width:8,height:8,borderRadius:"50%",background:"#dc2626",marginTop:7,flexShrink:0}}/>
-                  <div style={{fontSize:14,color:"#334155",lineHeight:1.7}}>{t}</div>
-                </div>
-              ))}
-            </div>
-
-            {/* 2nd Order */}
-            <div style={{padding:"32px",borderRadius:20,border:"1px solid #fde68a",background:"#fffbeb",marginBottom:20}}>
-              <div style={{fontSize:11,color:"#92400e",textTransform:"uppercase",letterSpacing:2,marginBottom:16,fontWeight:700}}>2nd Order Impact — Social & Political</div>
-              {pol.second.map((t,i) => (
-                <div key={i} style={{display:"flex",gap:12,marginBottom:14,alignItems:"flex-start"}}>
-                  <div style={{width:8,height:8,borderRadius:"50%",background:"#d97706",marginTop:7,flexShrink:0}}/>
-                  <div style={{fontSize:14,color:"#334155",lineHeight:1.7}}>{t}</div>
-                </div>
-              ))}
-            </div>
-
-            {/* Why Now */}
-            <div style={{padding:"32px",borderRadius:20,border:"1px solid #bfdbfe",background:"#eff6ff",marginBottom:20}}>
-              <div style={{fontSize:11,color:"#1d4ed8",textTransform:"uppercase",letterSpacing:2,marginBottom:16,fontWeight:700}}>Why Now — The Urgency of Acting Today</div>
-              {pol.whyNow.map((t,i) => (
-                <div key={i} style={{display:"flex",gap:12,marginBottom:14,alignItems:"flex-start"}}>
-                  <div style={{width:8,height:8,borderRadius:"50%",background:"#2563eb",marginTop:7,flexShrink:0}}/>
-                  <div style={{fontSize:14,color:"#334155",lineHeight:1.7}}>{t}</div>
-                </div>
-              ))}
-            </div>
-
-            {/* What If Not */}
-            <div style={{padding:"32px",borderRadius:20,border:"1px solid #1e293b",background:"#0f172a",marginBottom:20}}>
-              <div style={{fontSize:11,color:"#f87171",textTransform:"uppercase",letterSpacing:2,marginBottom:16,fontWeight:700}}>What If Not — The Cost of Inaction</div>
-              {pol.whatIfNot.map((t,i) => (
-                <div key={i} style={{display:"flex",gap:12,marginBottom:14,alignItems:"flex-start"}}>
-                  <div style={{width:8,height:8,borderRadius:"50%",background:"#ef4444",marginTop:7,flexShrink:0}}/>
-                  <div style={{fontSize:14,color:"#cbd5e1",lineHeight:1.7}}>{t}</div>
-                </div>
-              ))}
-            </div>
-
-            {/* Recommendations */}
-            <div style={{padding:"32px",borderRadius:20,border:"1px solid #e2e8f0",background:"#fff",marginBottom:20}}>
-              <div style={{fontSize:11,color:"#94a3b8",textTransform:"uppercase",letterSpacing:2,marginBottom:16}}>Recommended Actions</div>
-              {pol.rc.map((r,i)=>(<div key={i} style={{display:"flex",gap:14,marginBottom:16,alignItems:"flex-start"}}><div style={{width:28,height:28,borderRadius:"50%",background:"#f1f5f9",color:"#0f172a",fontSize:13,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>{i+1}</div><div style={{fontSize:15,color:"#334155",lineHeight:1.65}}>{r}</div></div>))}
-            </div>
-
-            <div style={{padding:"20px 24px",borderRadius:12,background:"#fffbeb",border:"1px solid #fde68a"}}>
-              <div style={{fontSize:12,fontWeight:600,color:"#92400e",marginBottom:4}}>Confidence Note</div>
-              <div style={{fontSize:12,color:"#78716c",lineHeight:1.6}}>Based on simplified macro-accounting model. Directionally reliable, not a precise forecast. Key uncertainties: avg km/year per motorcycle (6,000–10,000), Pertamina compensation formula, EV adoption trajectory. CO2 calculations use IPCC standard gasoline emission factor of 2.31 kg CO2/liter. Tree absorption estimate uses average of 22 kg CO2/year per mature tree.</div>
-            </div>
+            <div style={{padding:"16px 20px",borderRadius:10,background:"#fef9ee",border:"1px solid #fde68a"}}><div style={{fontSize:10,fontWeight:700,color:"#78350f",marginBottom:4,fontFamily:"'Space Mono',monospace"}}>Confidence Note</div><div style={{fontSize:11,color:T.muted,lineHeight:1.6}}>Simplified macro model. Directional, not precise. Key uncertainties: avg km/yr (6K-10K), Pertamina compensation, EV trajectory. CO2: IPCC 2.31 kg/L. Trees: EPA 22 kg/yr.</div></div>
           </div>
         </div>
       </section>
 
       {/* ═══ METHODOLOGY ═══ */}
-      <section ref={rf("me")} style={{padding:"100px 24px"}}>
-        <div style={{maxWidth:800,margin:"0 auto"}}>
-          <div {...an("me")} style={{textAlign:"center",marginBottom:56}}><div style={{fontSize:13,fontWeight:600,color:"#94a3b8",textTransform:"uppercase",letterSpacing:5,marginBottom:16}}>Transparency</div><h2 style={{fontSize:"clamp(28px,4.5vw,44px)",fontWeight:800,lineHeight:1.08,color:"#0f172a",letterSpacing:-1}}>How this works.</h2></div>
-          {[["Transmission Logic","Global oil price \u2192 landed fuel cost (via FX) \u2192 subsidy gap \u2192 fiscal burden \u2192 trade deficit \u2192 inflation (if pass-through) \u2192 FX pressure. EVs reduce gasoline volume through the entire chain."],
-            ["Key Assumptions","Crack spread: USD 10/bbl. Freight: 5%. 159 L/barrel. Pertalite retail: IDR 10,000/L. Subsidized volume: ~30 Bn L/yr. Net imports: ~300,000 bpd. CPI fuel weight: 4%. Fleet: 130M. GDP: ~USD 1,400 Bn. CO2 per liter gasoline: 2.31 kg (IPCC). Tree CO2 absorption: 22 kg/year (EPA average)."],
-            ["Data Sources","Bank Indonesia \u00B7 Ministry of Finance (APBN) \u00B7 BPS \u00B7 ESDM \u00B7 IEA \u00B7 World Bank \u00B7 IISD (2026) \u00B7 Pertamina \u00B7 ICCT (2025) \u00B7 AISI \u00B7 IPCC Emission Factors"],
-            ["Limitations","Does not model GDP growth, endogenous FX, BI monetary reaction, provincial variation, grid constraints, battery import offset, or air quality health benefits (which would make the EV case even stronger)."]
-          ].map(([t,d],i)=>(<div key={i} {...an("me",i*0.08)} style={{padding:"24px 28px",borderRadius:16,border:"1px solid #e2e8f0",background:"#fafafa",marginBottom:14}}><div style={{fontSize:15,fontWeight:700,color:"#0f172a",marginBottom:8}}>{t}</div><div style={{fontSize:14,color:"#64748b",lineHeight:1.7}}>{d}</div></div>))}
+      <section ref={rf("me")} className="grain" style={{padding:M?"80px 20px":"100px 24px",background:T.bg}}>
+        <div style={{maxWidth:760,margin:"0 auto"}}>
+          <div {...an("me")} style={{textAlign:"center",marginBottom:48}}><div style={{fontSize:11,color:T.muted,textTransform:"uppercase",letterSpacing:6,fontFamily:"'Space Mono',monospace",marginBottom:16}}>Transparency</div><h2 style={{fontSize:M?"26px":"clamp(28px,4.5vw,44px)",fontWeight:400,lineHeight:1.1,color:T.ink,letterSpacing:-1,fontFamily:"'DM Serif Text',serif"}}>How this works.</h2></div>
+          {[["Transmission","Oil price \u2192 landed cost (FX) \u2192 subsidy gap \u2192 fiscal burden \u2192 trade deficit \u2192 inflation \u2192 FX pressure. EVs reduce gasoline flowing through the chain."],["Assumptions","Crack: $10/bbl. Freight: 5%. 159 L/bbl. Pertalite: IDR 10K/L. Vol: ~30B L/yr. Net imports: ~300K bpd. CPI fuel: 4%. Fleet: 130M. GDP: ~$1,400B. CO2: 2.31 kg/L. Trees: 22 kg/yr."],["Sources","Bank Indonesia \u00B7 MoF \u00B7 BPS \u00B7 ESDM \u00B7 IEA \u00B7 World Bank \u00B7 IISD \u00B7 Pertamina \u00B7 ICCT \u00B7 IPCC"],["Limits","No GDP model, endogenous FX, BI reaction, provincial data, grid constraints, battery imports, or air quality benefits."]].map(([t,d],i)=><div key={i} {...an("me",i*0.07)} style={{padding:M?"18px":"22px 26px",borderRadius:12,border:`1px solid ${T.border}`,background:T.card,marginBottom:10,boxShadow:"0 1px 3px rgba(26,26,46,0.03)"}}><div style={{fontSize:13,fontWeight:600,color:T.ink,marginBottom:6,fontFamily:"'DM Serif Text',serif"}}>{t}</div><div style={{fontSize:12,color:T.muted,lineHeight:1.7}}>{d}</div></div>)}
         </div>
       </section>
 
       {/* ═══ FOOTER ═══ */}
-      <footer style={{padding:"80px 24px 48px",borderTop:"1px solid #e2e8f0",background:"#f8fafc"}}>
-        <div style={{maxWidth:700,margin:"0 auto",textAlign:"center"}}>
-          <div style={{fontSize:15,fontWeight:700,color:"#0f172a",marginBottom:12}}>Indonesia Oil-Macro-EV Simulator</div>
-          <div style={{fontSize:13,color:"#64748b",lineHeight:1.9,marginBottom:24}}>
-            Sources: Bank Indonesia · Ministry of Finance · BPS · ESDM · IEA · World Bank · IISD · ICCT · IPCC
+      <footer className="grain" style={{padding:M?"60px 20px 40px":"80px 24px 48px",borderTop:`1px solid ${T.border}`,background:T.bg2}}>
+        <div style={{maxWidth:660,margin:"0 auto",textAlign:"center"}}>
+          <div style={{fontSize:18,fontWeight:400,color:T.ink,marginBottom:8,fontFamily:"'DM Serif Text',serif"}}>Indonesia Oil-Macro-EV Simulator</div>
+          <div style={{fontSize:11,color:T.muted,lineHeight:1.9,marginBottom:20,fontFamily:"'Space Mono',monospace"}}>BI \u00B7 MoF \u00B7 BPS \u00B7 ESDM \u00B7 IEA \u00B7 World Bank \u00B7 IISD \u00B7 ICCT \u00B7 IPCC</div>
+          <div style={{padding:"22px 24px",borderRadius:12,background:T.card,border:`1px solid ${T.border}`,marginBottom:16,textAlign:"left"}}>
+            <div style={{fontSize:13,color:T.muted,lineHeight:1.8,fontStyle:"italic",fontFamily:"'DM Serif Text',serif"}}>This simulation combines research with simplifying assumptions to make complex macroeconomics accessible. It is not a definitive conclusion \u2014 rather, an <strong style={{fontStyle:"normal",color:T.ink}}>invitation to think</strong>. The model is imperfect. I\u2019d be genuinely happy if others improve it or challenge its assumptions. The goal was never perfection \u2014 it was to start a more informed conversation.</div>
           </div>
-
-          <div style={{padding:"24px 28px",borderRadius:16,background:"#fff",border:"1px solid #e2e8f0",marginBottom:24,textAlign:"left"}}>
-            <div style={{fontSize:13,color:"#475569",lineHeight:1.8,fontStyle:"italic"}}>
-              This simulation uses various research sources combined with simplifying assumptions to make complex macroeconomic relationships accessible and explorable. It is not intended as a definitive conclusion — rather, it is an <strong style={{fontStyle:"normal"}}>invitation to think</strong> about what makes sense and what doesn't, what matters most and what deserves closer examination. The model is imperfect, as all models are. I would be genuinely happy if others find ways to improve it, challenge its assumptions, or build upon it. The goal was never perfection — it was to start a more informed conversation about Indonesia's oil vulnerability and the macro case for EV adoption.
-            </div>
+          <div style={{padding:"22px 24px",borderRadius:12,background:T.ink,color:"#fff"}}>
+            <div style={{fontSize:15,fontWeight:400,marginBottom:6,fontFamily:"'DM Serif Text',serif"}}>Created by Gunawan Panjaitan</div>
+            <div style={{fontSize:12,color:T.muted2,marginBottom:10}}>An EV enthusiast exploring energy economics and Indonesia\u2019s future.</div>
+            <div style={{fontSize:12,color:T.muted}}><span style={{marginRight:14}}>{"\u2709"} <a href="mailto:gunawan_pnjaitan@yahoo.co.id" style={{color:T.accent,textDecoration:"none"}}>gunawan_pnjaitan@yahoo.co.id</a></span><span>in <a href="https://www.linkedin.com/in/gunawan-panjaitan/" target="_blank" rel="noopener noreferrer" style={{color:T.accent,textDecoration:"none"}}>Gunawan Panjaitan</a></span></div>
           </div>
-
-          <div style={{padding:"24px 28px",borderRadius:16,background:"#0f172a",color:"#fff",textAlign:"center"}}>
-            <div style={{fontSize:14,fontWeight:600,marginBottom:8}}>Created by Gunawan Panjaitan</div>
-            <div style={{fontSize:13,color:"#94a3b8",marginBottom:4}}>An EV enthusiast exploring the intersection of energy economics and Indonesia's future.</div>
-            <div style={{fontSize:13,color:"#64748b",marginTop:12,lineHeight:1.8}}>
-              <span style={{marginRight:16}}>✉ <a href="mailto:gunawan_pnjaitan@yahoo.co.id" style={{color:"#38bdf8",textDecoration:"none"}}>gunawan_pnjaitan@yahoo.co.id</a></span>
-              <span>in <a href="https://www.linkedin.com/in/gunawan-panjaitan/" target="_blank" rel="noopener noreferrer" style={{color:"#38bdf8",textDecoration:"none"}}>Gunawan Panjaitan</a></span>
-            </div>
-          </div>
-
-          <div style={{fontSize:11,color:"#94a3b8",marginTop:24}}>All estimates are provisional and should be validated before policy use. © 2026</div>
+          <div style={{fontSize:10,color:T.muted2,marginTop:16,fontFamily:"'Space Mono',monospace"}}>All estimates provisional \u00B7 Validate before policy use \u00B7 \u00A9 2026</div>
         </div>
       </footer>
 
-      {/* ═══ AI CHATBOT ═══ */}
-      <ChatBot currentScenario={inp} currentResults={res} />
+      {/* ═══ CHATBOT ═══ */}
+      <ChatBot inp={inp} res={res} T={T}/>
     </div>
   );
 }
 
-/* ═══ AI CHATBOT COMPONENT ═══ */
-function ChatBot({ currentScenario, currentResults }) {
-  const [open, setOpen] = useState(false);
-  const [messages, setMessages] = useState([
-    { role: "assistant", content: "Hi! I'm the Indonesia Macro-EV assistant. Ask me anything about the simulation — how the model works, what the results mean, the methodology, EV impact, or policy implications. I have full context of your current scenario settings." }
-  ]);
-  const [input, setInput] = useState("");
-  const [loading, setLoading] = useState(false);
-  const chatEnd = useRef(null);
-
-  useEffect(() => {
-    chatEnd.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-
-  const systemPrompt = `You are an expert assistant embedded in the Indonesia Oil-Macro-EV Simulator dashboard. You help users understand:
-- How the simulation model works (transmission chain from oil price to macro outcomes)
-- What the current results mean and their implications
-- The methodology, assumptions, and limitations
-- How EV 2-wheelers provide macro resilience
-- Policy implications for Indonesia
-- Data sources and confidence levels
-
-CURRENT SCENARIO the user is viewing:
-- Brent crude: USD ${currentScenario.brent}/bbl
-- USD/IDR rate: ${currentScenario.usdIdr}
-- Fuel pass-through: ${currentScenario.passThrough}%
-- EV fleet share: ${currentScenario.evFleetPct}% (~${Math.round(currentScenario.evFleetPct * 1.3)}M of 130M motorcycles)
-- Time horizon: ${currentScenario.timeHorizon} year(s)
-
-CURRENT RESULTS:
-- Overall macro stress: ${currentResults.ov}/10
-- Subsidy burden: IDR ${currentResults.sb} trillion/year (${currentResults.sc > 0 ? '+' : ''}${currentResults.sc} vs base)
-- Oil import bill: USD ${currentResults.ni} billion/year
-- Inflation impact: +${currentResults.ct} pp CPI
-- Current account impact: ${currentResults.cp > 0 ? '+' : ''}${currentResults.cp} pp GDP
-- EV gasoline displaced: ${currentResults.dp} billion liters/year
-- EV avoided imports: USD ${currentResults.ai} billion/year
-- EV avoided subsidy: IDR ${currentResults.as2} trillion/year
-- CO2 reduced: ${currentResults.co2.toLocaleString()} tons/year
-
-KEY MODEL ASSUMPTIONS:
-- Crack spread: USD 10/bbl, Freight: 5%, 159 L/barrel conversion
-- Pertalite retail: IDR 10,000/L, Subsidized volume: ~30 Bn L/yr
-- Net oil imports: ~300,000 bpd, CPI fuel weight: 4%
-- Motorcycle fleet: 130M, GDP: ~USD 1,400 Bn
-- CO2 per liter gasoline: 2.31 kg (IPCC), Tree absorption: 22 kg/yr (EPA)
-
-Be concise, clear, and Indonesia-specific. If asked about limitations, be honest. This model is directionally reliable but uses simplified assumptions. Created by Gunawan Panjaitan, an EV enthusiast.`;
-
-  async function sendMessage() {
-    if (!input.trim() || loading) return;
-    const userMsg = { role: "user", content: input.trim() };
-    const newMessages = [...messages, userMsg];
-    setMessages(newMessages);
-    setInput("");
-    setLoading(true);
-
-    try {
-      const apiMessages = newMessages
-        .filter(m => m.role !== "system")
-        .map(m => ({ role: m.role, content: m.content }));
-
-      const response = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
-          max_tokens: 1000,
-          system: systemPrompt,
-          messages: apiMessages
-        })
-      });
-
-      const data = await response.json();
-      const assistantText = data.content
-        ?.filter(item => item.type === "text")
-        .map(item => item.text)
-        .join("\n") || "Sorry, I couldn't process that. Please try again.";
-
-      setMessages(prev => [...prev, { role: "assistant", content: assistantText }]);
-    } catch (err) {
-      setMessages(prev => [...prev, { role: "assistant", content: "I'm having trouble connecting right now. Please try again in a moment." }]);
-    }
-    setLoading(false);
-  }
-
-  if (!open) {
-    return (
-      <button onClick={() => setOpen(true)} style={{
-        position: "fixed", bottom: 24, right: 24, width: 60, height: 60, borderRadius: "50%",
-        background: "#0f172a", color: "#fff", border: "none", cursor: "pointer",
-        boxShadow: "0 4px 20px rgba(0,0,0,0.25)", fontSize: 24, display: "flex",
-        alignItems: "center", justifyContent: "center", zIndex: 9999,
-        transition: "transform 0.2s"
-      }}
-        onMouseEnter={e => e.target.style.transform = "scale(1.1)"}
-        onMouseLeave={e => e.target.style.transform = "scale(1)"}
-      >
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-      </button>
-    );
-  }
-
-  return (
-    <div style={{
-      position: "fixed", bottom: 24, right: 24, width: 400, height: 540,
-      background: "#fff", borderRadius: 20, boxShadow: "0 8px 40px rgba(0,0,0,0.2)",
-      display: "flex", flexDirection: "column", overflow: "hidden", zIndex: 9999,
-      border: "1px solid #e2e8f0"
-    }}>
-      {/* Header */}
-      <div style={{
-        padding: "16px 20px", background: "#0f172a", color: "#fff",
-        display: "flex", justifyContent: "space-between", alignItems: "center"
-      }}>
-        <div>
-          <div style={{ fontSize: 14, fontWeight: 700 }}>Ask the Simulator</div>
-          <div style={{ fontSize: 11, color: "#94a3b8" }}>Powered by Claude AI</div>
-        </div>
-        <button onClick={() => setOpen(false)} style={{
-          background: "none", border: "none", color: "#94a3b8", fontSize: 20,
-          cursor: "pointer", padding: "4px 8px", borderRadius: 6
-        }}>✕</button>
-      </div>
-
-      {/* Messages */}
-      <div style={{
-        flex: 1, overflowY: "auto", padding: "16px",
-        display: "flex", flexDirection: "column", gap: 12
-      }}>
-        {messages.map((m, i) => (
-          <div key={i} style={{
-            alignSelf: m.role === "user" ? "flex-end" : "flex-start",
-            maxWidth: "85%",
-            padding: "10px 14px",
-            borderRadius: m.role === "user" ? "16px 16px 4px 16px" : "16px 16px 16px 4px",
-            background: m.role === "user" ? "#0f172a" : "#f1f5f9",
-            color: m.role === "user" ? "#fff" : "#334155",
-            fontSize: 13, lineHeight: 1.6,
-            whiteSpace: "pre-wrap"
-          }}>
-            {m.content}
-          </div>
-        ))}
-        {loading && (
-          <div style={{
-            alignSelf: "flex-start", padding: "10px 14px", borderRadius: "16px 16px 16px 4px",
-            background: "#f1f5f9", color: "#94a3b8", fontSize: 13
-          }}>
-            Thinking...
-          </div>
-        )}
-        <div ref={chatEnd} />
-      </div>
-
-      {/* Input */}
-      <div style={{
-        padding: "12px 16px", borderTop: "1px solid #e2e8f0",
-        display: "flex", gap: 8
-      }}>
-        <input
-          value={input}
-          onChange={e => setInput(e.target.value)}
-          onKeyDown={e => e.key === "Enter" && sendMessage()}
-          placeholder="Ask about the model, results, or policy..."
-          style={{
-            flex: 1, padding: "10px 14px", borderRadius: 12,
-            border: "1px solid #e2e8f0", fontSize: 13, outline: "none",
-            fontFamily: "inherit"
-          }}
-        />
-        <button onClick={sendMessage} disabled={loading || !input.trim()} style={{
-          padding: "10px 16px", borderRadius: 12, background: "#0f172a",
-          color: "#fff", border: "none", fontSize: 13, fontWeight: 600,
-          cursor: loading ? "default" : "pointer", opacity: loading ? 0.5 : 1
-        }}>
-          Send
-        </button>
-      </div>
+/* ═══ CHATBOT ═══ */
+function ChatBot({inp,res,T}){
+  const[open,setOpen]=useState(false);
+  const[msgs,setMsgs]=useState([{role:"assistant",content:"Hello! I can answer questions about this simulation \u2014 methodology, results, assumptions, EV impact, or policy implications. What would you like to know?"}]);
+  const[input,setInput]=useState("");
+  const[loading,setLoading]=useState(false);
+  const end=useRef(null);
+  const W=useW();
+  useEffect(()=>{end.current?.scrollIntoView({behavior:"smooth"});},[msgs]);
+  const sys=`You are the assistant for the Indonesia Oil-Macro-EV Simulator. Current: Brent $${inp.brent}, IDR ${inp.usdIdr}, ${inp.passThrough}% pass-through, ${inp.evFleetPct}% EV. Results: stress ${res.ov}/10, subsidy IDR ${res.sb}T, imports USD ${res.ni}B, CPI +${res.ct}pp, EV savings $${res.ai}B + IDR ${res.as2}T. Be concise, Indonesia-specific, honest about limitations. By Gunawan Panjaitan.`;
+  async function send(){if(!input.trim()||loading)return;const nm=[...msgs,{role:"user",content:input.trim()}];setMsgs(nm);setInput("");setLoading(true);try{const r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:800,system:sys,messages:nm.map(m=>({role:m.role,content:m.content}))})});const d=await r.json();setMsgs(p=>[...p,{role:"assistant",content:d.content?.filter(i=>i.type==="text").map(i=>i.text).join("\n")||"Please try again."}]);}catch{setMsgs(p=>[...p,{role:"assistant",content:"Connection issue. Please retry."}]);}setLoading(false);}
+  if(!open)return(<button onClick={()=>setOpen(true)} style={{position:"fixed",bottom:20,right:20,width:52,height:52,borderRadius:12,background:T.ink,color:"#fff",border:"none",cursor:"pointer",boxShadow:"0 4px 20px rgba(26,26,46,0.25)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:9999}} aria-label="Chat"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></button>);
+  return(<div style={{position:"fixed",bottom:20,right:20,width:Math.min(370,W-32),height:460,background:T.card,borderRadius:16,boxShadow:"0 8px 40px rgba(26,26,46,0.2)",display:"flex",flexDirection:"column",overflow:"hidden",zIndex:9999,border:`1px solid ${T.border}`}}>
+    <div style={{padding:"14px 18px",background:T.ink,color:"#fff",display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><div style={{fontSize:14,fontWeight:400,fontFamily:"'DM Serif Text',serif"}}>Ask the Simulator</div><div style={{fontSize:10,color:T.muted2,fontFamily:"'Space Mono',monospace"}}>Powered by Claude AI</div></div><button onClick={()=>setOpen(false)} style={{background:"none",border:"none",color:T.muted2,fontSize:16,cursor:"pointer",padding:"4px 8px"}}>x</button></div>
+    <div style={{flex:1,overflowY:"auto",padding:12,display:"flex",flexDirection:"column",gap:8,background:T.bg}}>
+      {msgs.map((m,i)=><div key={i} style={{alignSelf:m.role==="user"?"flex-end":"flex-start",maxWidth:"85%",padding:"10px 14px",borderRadius:m.role==="user"?"12px 12px 4px 12px":"12px 12px 12px 4px",background:m.role==="user"?T.ink:T.card,color:m.role==="user"?"#fff":T.ink2,fontSize:12,lineHeight:1.55,whiteSpace:"pre-wrap",border:m.role==="user"?"none":`1px solid ${T.border}`}}>{m.content}</div>)}
+      {loading&&<div style={{alignSelf:"flex-start",padding:"10px 14px",borderRadius:"12px 12px 12px 4px",background:T.card,color:T.muted,fontSize:12,border:`1px solid ${T.border}`}}>Thinking...</div>}
+      <div ref={end}/>
     </div>
-  );
+    <div style={{padding:"10px 12px",borderTop:`1px solid ${T.border}`,display:"flex",gap:8,background:T.card}}>
+      <input value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>e.key==="Enter"&&send()} placeholder="Ask about the model..." style={{flex:1,padding:"10px 14px",borderRadius:8,border:`1px solid ${T.border}`,fontSize:12,outline:"none",fontFamily:"inherit",background:T.bg}}/>
+      <button onClick={send} disabled={loading} style={{padding:"10px 16px",borderRadius:8,background:T.accent,color:"#fff",border:"none",fontSize:11,fontWeight:700,cursor:"pointer",opacity:loading?0.5:1,fontFamily:"'Space Mono',monospace"}}>Send</button>
+    </div>
+  </div>);
 }
