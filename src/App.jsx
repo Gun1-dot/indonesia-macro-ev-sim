@@ -338,7 +338,7 @@ export default function App() {
             <div style={{ maxWidth: 600 }}>
               <div style={{ fontSize: 10, color: T.mut, textTransform: "uppercase", letterSpacing: 6, marginBottom: 20, fontFamily: T.mon }}>Indonesia Macro Simulation</div>
               <h1 style={{ fontSize: M ? "32px" : "clamp(40px,5.5vw,64px)", fontWeight: 400, lineHeight: 1.08, color: T.ink, letterSpacing: -2, fontFamily: T.ser }}>How oil prices shape<br /><span style={{ color: T.acc }}>Indonesia's</span> economy.</h1>
-              <p style={{ fontSize: M ? 13 : 16, color: T.mut, maxWidth: 480, marginTop: 20, lineHeight: 1.7 }}>Interactive decision-support for policy makers, EV players, researchers, and investors.</p>
+              <p style={{ fontSize: M ? 13 : 16, color: T.mut, maxWidth: 480, marginTop: 20, lineHeight: 1.7 }}>Interactive decision-support for policy makers, EV 2 Wheeler players, researchers, and investors.</p>
               <div style={{ marginTop: 28, padding: "16px 24px", borderRadius: 10, background: "rgba(26,26,46,0.06)", border: "1px solid " + T.brd, display: "inline-block" }}>
                 <div style={{ fontSize: 9, color: T.mut, textTransform: "uppercase", letterSpacing: 3, marginBottom: 4, fontFamily: T.mon }}>Indonesia has spent on oil imports since you opened this page</div>
                 <div style={{ fontSize: M ? 26 : 38, fontWeight: 700, color: T.red, fontFamily: T.mon, letterSpacing: -1 }}>{"$" + Math.floor(cnt).toLocaleString()}</div>
