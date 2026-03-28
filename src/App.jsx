@@ -22,33 +22,58 @@ function sim(inp){
 function pol(r,inp){
   const e=Object.entries(r.st).sort((a,b)=>b[1]-a[1]),nm={fiscal:"Fiscal",external:"External",inflation:"Inflation",fx:"Exchange Rate"};
   const sv=r.ov>7?"severe":r.ov>5?"significant":r.ov>3?"moderate":"manageable";
-  let hl=r.ov<=2?`Stable at $${inp.brent}/bbl. No material stress.`:r.ov<=4?`${sv.charAt(0).toUpperCase()+sv.slice(1)} pressure via ${nm[e[0][0]].toLowerCase()}.`:r.ov<=6?`Significant stress: ${nm[e[0][0]].toLowerCase()} + ${nm[e[1][0]].toLowerCase()}.`:`Severe multi-channel stress. Urgent response needed.`;
-  let f1=[],f2=[],wn=[],wif=[];
-  if(r.st.fiscal>3)f1.push("Subsidy burden consumes fiscal space for infrastructure, health, education.");
-  if(r.st.inflation>2)f1.push(`Prices rise ~${r.ct}pp, eroding purchasing power for 280M people.`);
-  if(r.st.external>3)f1.push("Trade deficit widens, draining FX reserves.");
-  if(r.st.fx>3)f1.push("Rupiah weakens, making all imports costlier.");
-  if(!f1.length)f1.push("Economic impacts contained.");
-  if(r.st.inflation>3&&inp.passThrough>30){f2.push("Risk of public protests \u2014 history of unrest after fuel hikes (1998, 2005, 2013, 2022).");f2.push("Ojol drivers, vendors hit hardest \u2014 transport cost rise pushes households into poverty.");}
-  if(r.st.fiscal>4){f2.push("Subsidy crowds out infrastructure, hiring, healthcare.");f2.push("Political trap: backlash for raising prices AND for not building roads.");}
-  if(r.st.fx>4)f2.push("Weak rupiah erodes public confidence, dominates media.");
-  if(!f2.length)f2.push("Social and political risks remain low.");
-  wn.push("Oil dependence structural: production fell from 1.6M bpd to <600K.");
-  if(inp.brent>85)wn.push(`At $${inp.brent}/bbl, each month delay = ~IDR ${Math.round(r.sb/12*10)/10}T more in subsidies.`);
-  wn.push("Global EV race accelerating. Delay = importing EVs instead of building them.");
-  wn.push("2030 demographic window: subsidies now = lost human capital investment forever.");
-  if(r.ov>3){wif.push("Without action, import bill grows, subsidy expands, vulnerability increases.");wif.push("130M motorcycles burning 25-30B liters/year of imported fuel. Permanent drain.");}
-  if(r.st.fiscal>4)wif.push("Risk of 2013-14 repeat: energy subsidies consumed 20%+ of budget.");
-  wif.push("Inaction = structural decline. Vietnam, India, Thailand are moving.");
-  let rc=[];
-  if(r.st.fiscal>4&&inp.passThrough<50)rc.push("Partial pass-through + targeted BLT transfers");
-  if(r.st.fiscal>3)rc.push("Protect dev spending from subsidy crowding-out");
-  if(r.st.inflation>3)rc.push("Coordinate with BI on inflation management");
-  if(r.st.external>4)rc.push("Strengthen FX reserves, activate swap lines");
-  if(inp.evFleetPct<5&&inp.brent>85)rc.push("Accelerate EV incentives \u2014 peak resilience value");
-  if(inp.evFleetPct>=5)rc.push("Extend EV incentives to ride-hailing/delivery");
-  rc.push("APBN-P preparedness for Pertamina compensation");
-  return{hl,sv,top:nm[e[0][0]],rc,f1,f2,wn,wif};
+  let hl=r.ov<=2?"Indonesia can absorb current oil prices without material fiscal or external stress. Macro fundamentals are stable.":r.ov<=4?sv.charAt(0).toUpperCase()+sv.slice(1)+" macro pressure detected, primarily through the "+nm[e[0][0]].toLowerCase()+" channel. Manageable but warrants active monitoring and preparedness.":r.ov<=6?"Significant stress building across "+nm[e[0][0]].toLowerCase()+" and "+nm[e[1][0]].toLowerCase()+" channels. Policy intervention is advisable before pressures compound.":"Warning: Severe multi-channel macro stress. Without coordinated fiscal, monetary, and structural response, cascading economic and social consequences are likely.";
+
+  // 1st order: Economic
+  let f1=[];
+  f1.push("Oil import bill: Indonesia pays USD "+r.ni+" billion/year for oil imports"+(r.td>0?" (+"+ r.td+"B vs baseline), directly widening the trade deficit.":"."));
+  if(r.st.fiscal>2)f1.push("Fiscal burden: Government spends IDR "+r.sb+" trillion/year on fuel subsidies"+(r.sc>0?" (+"+r.sc+"T vs baseline), consuming budget meant for development.":"."));
+  if(r.st.inflation>1.5)f1.push("Inflation: Consumer prices rise by an estimated "+r.ct+" percentage points, driven by fuel cost pass-through into transport, food, and logistics across the archipelago.");
+  if(r.st.fx>2)f1.push("Currency pressure: The rupiah faces depreciation pressure (FX stress score "+r.fx+"/10), making all imports more expensive and creating a compounding cost spiral.");
+  f1.push("Current account: Oil trade deficit contributes "+(r.cp>0?"+":"")+r.cp+" percentage points to the current account balance as share of GDP.");
+
+  // 2nd order: Social + Political
+  let f2=[];
+  if(r.st.inflation>2&&inp.passThrough>20)f2.push("Household welfare: Rising fuel and food prices hit lower-income households hardest. Motorcycle-dependent workers (ojol, delivery, farmers) spend a higher share of income on fuel. A 20-30% transport cost increase can push vulnerable families below the poverty line.");
+  if(r.st.inflation>3&&inp.passThrough>30)f2.push("Social stability risk: Indonesia has documented history of public unrest following fuel price hikes (1998, 2005, 2013, 2022). The political cost of visible price increases is high and immediate.");
+  if(r.st.fiscal>3)f2.push("Development trade-off: Every IDR trillion absorbed by fuel subsidies is an IDR trillion NOT spent on hospitals, schools, roads, and job creation. This is invisible in the short term but compounds into long-term development setbacks.");
+  if(r.st.fiscal>4)f2.push("Political dilemma: Elected officials face backlash for raising fuel prices AND backlash when infrastructure is delayed. There is no cost-free option. The subsidy trap limits policy flexibility.");
+  if(r.st.fx>3)f2.push("Public confidence: A weakening rupiah erodes confidence in economic management. Currency movements dominate media coverage and shape voter sentiment, even when underlying fundamentals are manageable.");
+  if(r.ov>4)f2.push("Investment climate: Sustained macro stress slows foreign direct investment, weakens job creation, and risks turning Indonesia's demographic dividend (young growing workforce) into a demographic liability if employment absorption falls short.");
+  if(f2.length===0)f2.push("Under this scenario, social and political risks remain contained. Household welfare is not materially threatened, and no significant political pressure points are activated.");
+
+  // Why now
+  let wn=[];
+  wn.push("Oil import dependence is structural and growing: domestic production has declined from 1.6M bpd (1990s) to under 600,000 bpd today. The vulnerability deepens every year without structural change.");
+  if(inp.brent>85)wn.push("At USD "+inp.brent+"/bbl, every month of delay adds approximately IDR "+Math.round(r.sb/12*10)/10+" trillion in subsidy obligations that must eventually be paid by taxpayers, consumers, or through forgone development.");
+  wn.push("The global EV transition is accelerating. Countries that move early (China, Vietnam, India, Thailand) are locking in manufacturing investment. Delay means Indonesia imports EVs rather than builds them, missing the industrial opportunity.");
+  wn.push("Indonesia's 2030 demographic window is once-in-a-generation. Wasting fiscal space on fuel subsidies during this window means failing to invest in the human capital that determines whether Indonesia becomes a high-income economy.");
+
+  // What if not
+  let wif=[];
+  wif.push("Without structural action, Indonesia's oil import bill will continue to grow as a share of GDP. The subsidy burden will expand. Sensitivity to global oil volatility will increase, not decrease.");
+  wif.push("130 million motorcycles will continue burning 25-30 billion liters per year of imported gasoline. This is a permanent, recurring drain on the trade balance and fiscal budget that compounds annually.");
+  if(r.st.fiscal>3)wif.push("Risk of repeating the 2013-2014 fiscal crisis, when energy subsidies consumed over 20% of the national budget and forced emergency austerity measures that damaged growth and public services for years.");
+  wif.push("The long-term cost of inaction is not stasis. It is structural decline. Indonesia's peer competitors (Vietnam, India, Thailand) are moving aggressively on energy transition and EV industrialization. Standing still means falling behind.");
+
+  // SHORT-TERM recommendations (0-12 months)
+  let rcShort=[];
+  if(r.st.fiscal>4&&inp.passThrough<50)rcShort.push("Implement partial fuel price pass-through (30-50%) combined with targeted cash transfers (BLT/BST) to cushion vulnerable households while reducing the fiscal hemorrhage.");
+  if(r.st.fiscal>3)rcShort.push("Conduct emergency fiscal review to protect infrastructure, health, and education budgets from subsidy crowding-out. Prepare APBN-P budget revision for Pertamina compensation.");
+  if(r.st.inflation>3)rcShort.push("Coordinate with Bank Indonesia on inflation expectations management. Prepare communication strategy before any administered price adjustment.");
+  if(r.st.external>3)rcShort.push("Strengthen FX reserve buffers through bilateral swap line activation and SRBI issuance to stabilize rupiah.");
+  rcShort.push("Extend EV 2-wheeler purchase subsidy (IDR 7M/unit) and fast-track the conversion program for ride-hailing and delivery fleets, which have the highest daily km and therefore the highest per-unit gasoline displacement.");
+  rcShort.push("Announce a clear 12-month EV adoption target and charging infrastructure roadmap to signal policy commitment and crowd-in private investment.");
+
+  // LONG-TERM recommendations (1-5 years)
+  let rcLong=[];
+  rcLong.push("Set a binding national target: 10% EV motorcycle fleet share by 2030 (13M units). At this threshold, Indonesia saves USD 1.5-2.5B/year in imports and IDR 13-20T/year in subsidies, structurally reducing oil vulnerability.");
+  rcLong.push("Develop domestic EV and battery manufacturing capacity. Indonesia controls 22% of global nickel reserves. Vertical integration from nickel mining to battery cells to EV assembly creates an industrial ecosystem worth tens of billions.");
+  rcLong.push("Implement gradual, pre-announced fuel subsidy reform roadmap with 3-year transition timeline. Link subsidy reduction to visible increases in infrastructure and social spending so the public sees what the savings buy.");
+  rcLong.push("Build nationwide battery swap and charging infrastructure targeting 50,000+ points by 2028. Focus on Java first (59% of motorcycles), then expand to Sumatra and Kalimantan.");
+  rcLong.push("Establish an Energy Transition Fund: redirect a fixed percentage of annual fuel subsidy savings (e.g., 30%) into a ring-fenced fund for EV incentives, renewable energy, and green infrastructure. This creates a self-reinforcing cycle where more EVs = less subsidy = more fund = more EVs.");
+
+  return{hl,sv,top:nm[e[0][0]],rcShort,rcLong,f1,f2,wn,wif};
 }
 const PR=[
   {n:"Base Case",d:"Current",b:75,u:15800,p:15,e:0.2,t:1,k:8000,s:1},
@@ -168,9 +193,33 @@ export default function App(){
 
     {/* ═══ THE CHALLENGE — with images ═══ */}
     <section id="why" ref={rf("w")} style={{padding:M?"56px 20px":"80px 48px",maxWidth:1200,margin:"0 auto"}}>
-      <div {...an("w")} style={{textAlign:"center",marginBottom:48}}>
+      <div {...an("w")} style={{textAlign:"center",marginBottom:20}}>
         <div style={{fontSize:10,color:T.mut,textTransform:"uppercase",letterSpacing:6,fontFamily:T.mon,marginBottom:12}}>The Challenge</div>
         <h2 style={{fontSize:M?"26px":"clamp(30px,4vw,48px)",fontWeight:400,lineHeight:1.1,color:T.ink,fontFamily:T.ser}}>A nation dependent on <span style={{color:T.red}}>imported oil</span>.</h2>
+      </div>
+
+      {/* NET IMPORTER URGENCY BOX */}
+      <div {...an("w",0.08)} style={{maxWidth:800,margin:"0 auto 40px",padding:M?"24px 20px":"32px 36px",borderRadius:14,background:T.ink,position:"relative",overflow:"hidden"}}>
+        <div style={{position:"absolute",top:0,left:0,width:4,height:"100%",background:T.red}}/>
+        <div style={{fontSize:10,color:"#f87171",textTransform:"uppercase",letterSpacing:3,fontFamily:T.mon,marginBottom:12,fontWeight:700}}>NET OIL IMPORTER SINCE 2004</div>
+        <div style={{display:"grid",gridTemplateColumns:M?"1fr":"1fr auto 1fr auto 1fr",gap:M?12:0,alignItems:"center",marginBottom:16}}>
+          <div style={{textAlign:"center",padding:"8px 0"}}>
+            <div style={{fontSize:M?28:36,fontWeight:700,color:"#fff",fontFamily:T.mon}}>1.6M</div>
+            <div style={{fontSize:10,color:"#94a3b8",fontFamily:T.mon}}>bbl/day consumed</div>
+          </div>
+          {!M&&<div style={{fontSize:24,color:"#475569",textAlign:"center",padding:"0 16px"}}>-</div>}
+          <div style={{textAlign:"center",padding:"8px 0"}}>
+            <div style={{fontSize:M?28:36,fontWeight:700,color:"#fbbf24",fontFamily:T.mon}}>580K</div>
+            <div style={{fontSize:10,color:"#94a3b8",fontFamily:T.mon}}>bbl/day produced</div>
+          </div>
+          {!M&&<div style={{fontSize:24,color:"#475569",textAlign:"center",padding:"0 16px"}}>=</div>}
+          <div style={{textAlign:"center",padding:"8px 0"}}>
+            <div style={{fontSize:M?28:36,fontWeight:700,color:"#f87171",fontFamily:T.mon}}>1.02M</div>
+            <div style={{fontSize:10,color:"#94a3b8",fontFamily:T.mon}}>bbl/day IMPORTED</div>
+          </div>
+        </div>
+        <div style={{fontSize:13,color:"#cbd5e1",lineHeight:1.7,fontFamily:T.ser,fontStyle:"italic"}}>Every single day, Indonesia must import over 1 million barrels of oil from abroad. That is over USD 80 million leaving the country <em>daily</em> at current prices. This money does not build Indonesian roads. It does not fund Indonesian hospitals. It does not educate Indonesian children. It flows to oil-producing nations while Indonesia's own reserves deplete further every year.</div>
+        <div style={{marginTop:12,fontSize:12,color:"#f87171",fontWeight:600,fontFamily:T.mon}}>This is not a future risk. This is happening right now.</div>
       </div>
       <div {...an("w",0.15)} style={{display:"grid",gridTemplateColumns:M?"1fr":"1fr 1fr",gap:16}}>
         {/* Oil card — with image */}
@@ -335,28 +384,56 @@ export default function App(){
       <div style={{maxWidth:780,margin:"0 auto"}}>
         <div {...an("po")} style={{textAlign:"center",marginBottom:40}}>
           <h2 style={{fontSize:M?"24px":"clamp(28px,4vw,44px)",fontWeight:400,color:T.ink,fontFamily:T.ser}}>Policy Brief</h2>
-          <div style={{fontSize:10,color:T.mut,fontFamily:T.mon,marginTop:8}}>${inp.brent}/bbl \u00B7 IDR{inp.usdIdr.toLocaleString()} \u00B7 {inp.passThrough}%PT \u00B7 {inp.evFleetPct}%EV \u00B7 {inp.timeHorizon}Y</div>
+          <div style={{fontSize:10,color:T.mut,fontFamily:T.mon,marginTop:8}}>{"$"+inp.brent+"/bbl | IDR"+inp.usdIdr.toLocaleString()+" | "+inp.passThrough+"%PT | "+inp.evFleetPct+"%EV | "+inp.timeHorizon+"Y"}</div>
         </div>
         <div {...an("po",0.1)}>
-          <div style={{padding:"24px",borderRadius:12,border:`1.5px solid ${sc}33`,background:sb,marginBottom:12}}><div style={{fontSize:9,color:T.mut,textTransform:"uppercase",letterSpacing:3,fontFamily:T.mon,marginBottom:8}}>Assessment</div><div style={{fontSize:M?14:17,color:T.ink,lineHeight:1.7,fontFamily:T.ser}}>{p.hl}</div></div>
-
-          {[{t:"1st Order \u2014 Economic",it:p.f1,bg:T.card,br:"#fca5a5",d:T.red,tc:"#7f1d1d"},
-            {t:"2nd Order \u2014 Social & Political",it:p.f2,bg:"#fef9ee",br:"#fcd34d",d:T.amb,tc:"#78350f"},
-            {t:"Why Now",it:p.wn,bg:"#eff6ff",br:"#93c5fd",d:"#1d4ed8",tc:"#1e3a5f"},
-            {t:"What If Not",it:p.wif,bg:T.ink,br:"#334155",d:"#ef4444",tc:"#f87171"}
-          ].map((s,si)=>(
-            <div key={si} style={{padding:"20px 24px",borderRadius:12,border:`1px solid ${s.br}`,background:s.bg,marginBottom:10}}>
-              <div style={{fontSize:9,color:s.tc,textTransform:"uppercase",letterSpacing:3,fontFamily:T.mon,marginBottom:10,fontWeight:700}}>{s.t}</div>
-              {s.it.map((x,i)=><div key={i} style={{display:"flex",gap:8,marginBottom:8}}><div style={{width:5,height:5,borderRadius:"50%",background:s.d,marginTop:5,flexShrink:0}}/><div style={{fontSize:12,color:s.bg===T.ink?"#bbb":T.ink2,lineHeight:1.6}}>{x}</div></div>)}
-            </div>
-          ))}
-
-          <div style={{padding:"20px 24px",borderRadius:12,border:`1px solid ${T.brd}`,background:T.card,marginBottom:10}}>
-            <div style={{fontSize:9,color:T.mut,textTransform:"uppercase",letterSpacing:3,fontFamily:T.mon,marginBottom:10}}>Actions</div>
-            {p.rc.map((x,i)=><div key={i} style={{display:"flex",gap:10,marginBottom:8}}><div style={{width:20,height:20,borderRadius:4,background:T.bg2,color:T.ink,fontSize:10,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,fontFamily:T.mon}}>{i+1}</div><div style={{fontSize:12,color:T.ink2,lineHeight:1.55}}>{x}</div></div>)}
+          {/* Assessment */}
+          <div style={{padding:"24px",borderRadius:12,border:"1.5px solid "+sc+"33",background:sb,marginBottom:12}}>
+            <div style={{fontSize:9,color:T.mut,textTransform:"uppercase",letterSpacing:3,fontFamily:T.mon,marginBottom:8}}>SITUATION ASSESSMENT</div>
+            <div style={{fontSize:M?14:17,color:T.ink,lineHeight:1.7,fontFamily:T.ser}}>{p.hl}</div>
           </div>
 
-          <div style={{padding:"14px 18px",borderRadius:8,background:"#fef9ee",border:"1px solid #fcd34d"}}><div style={{fontSize:9,fontWeight:700,color:"#78350f",fontFamily:T.mon,marginBottom:3}}>CONFIDENCE</div><div style={{fontSize:10,color:T.mut,lineHeight:1.5}}>Simplified model. Directional, not precise. Uncertainties: km/yr (6K-10K), Pertamina formula, EV trajectory. CO2: IPCC 2.31kg/L. Trees: EPA 22kg/yr.</div></div>
+          {/* 1st Order - Economic */}
+          <div style={{padding:"20px 24px",borderRadius:12,border:"1px solid #fca5a5",background:T.card,marginBottom:10}}>
+            <div style={{fontSize:9,color:"#7f1d1d",textTransform:"uppercase",letterSpacing:3,fontFamily:T.mon,marginBottom:10,fontWeight:700}}>1ST ORDER IMPACT: ECONOMIC</div>
+            {p.f1.map(function(x,i){return(<div key={i} style={{display:"flex",gap:8,marginBottom:8}}><div style={{width:5,height:5,borderRadius:"50%",background:T.red,marginTop:5,flexShrink:0}}/><div style={{fontSize:12,color:T.ink2,lineHeight:1.6}}>{x}</div></div>)})}
+          </div>
+
+          {/* 2nd Order - Social & Political */}
+          <div style={{padding:"20px 24px",borderRadius:12,border:"1px solid #fcd34d",background:"#fef9ee",marginBottom:10}}>
+            <div style={{fontSize:9,color:"#78350f",textTransform:"uppercase",letterSpacing:3,fontFamily:T.mon,marginBottom:10,fontWeight:700}}>2ND ORDER IMPACT: SOCIAL AND POLITICAL</div>
+            {p.f2.map(function(x,i){return(<div key={i} style={{display:"flex",gap:8,marginBottom:8}}><div style={{width:5,height:5,borderRadius:"50%",background:T.amb,marginTop:5,flexShrink:0}}/><div style={{fontSize:12,color:T.ink2,lineHeight:1.6}}>{x}</div></div>)})}
+          </div>
+
+          {/* Why Now */}
+          <div style={{padding:"20px 24px",borderRadius:12,border:"1px solid #93c5fd",background:"#eff6ff",marginBottom:10}}>
+            <div style={{fontSize:9,color:"#1e3a5f",textTransform:"uppercase",letterSpacing:3,fontFamily:T.mon,marginBottom:10,fontWeight:700}}>WHY NOW: THE URGENCY OF ACTING TODAY</div>
+            {p.wn.map(function(x,i){return(<div key={i} style={{display:"flex",gap:8,marginBottom:8}}><div style={{width:5,height:5,borderRadius:"50%",background:"#1d4ed8",marginTop:5,flexShrink:0}}/><div style={{fontSize:12,color:T.ink2,lineHeight:1.6}}>{x}</div></div>)})}
+          </div>
+
+          {/* What If Not */}
+          <div style={{padding:"20px 24px",borderRadius:12,border:"1px solid #334155",background:T.ink,marginBottom:10}}>
+            <div style={{fontSize:9,color:"#f87171",textTransform:"uppercase",letterSpacing:3,fontFamily:T.mon,marginBottom:10,fontWeight:700}}>WHAT IF NOT: THE COST OF INACTION</div>
+            {p.wif.map(function(x,i){return(<div key={i} style={{display:"flex",gap:8,marginBottom:8}}><div style={{width:5,height:5,borderRadius:"50%",background:"#ef4444",marginTop:5,flexShrink:0}}/><div style={{fontSize:12,color:"#bbb",lineHeight:1.6}}>{x}</div></div>)})}
+          </div>
+
+          {/* SHORT TERM Recommendations */}
+          <div style={{padding:"20px 24px",borderRadius:12,border:"1px solid "+T.acc+"44",background:"#ecfeff",marginBottom:10}}>
+            <div style={{fontSize:9,color:T.acc2,textTransform:"uppercase",letterSpacing:3,fontFamily:T.mon,marginBottom:10,fontWeight:700}}>SHORT-TERM ACTIONS (0-12 MONTHS)</div>
+            {p.rcShort.map(function(x,i){return(<div key={i} style={{display:"flex",gap:10,marginBottom:8}}><div style={{width:20,height:20,borderRadius:4,background:T.acc+"22",color:T.acc2,fontSize:10,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,fontFamily:T.mon}}>{"S"+(i+1)}</div><div style={{fontSize:12,color:T.ink2,lineHeight:1.55}}>{x}</div></div>)})}
+          </div>
+
+          {/* LONG TERM Recommendations */}
+          <div style={{padding:"20px 24px",borderRadius:12,border:"1px solid "+T.grn+"44",background:"#f0fdf4",marginBottom:10}}>
+            <div style={{fontSize:9,color:T.grn,textTransform:"uppercase",letterSpacing:3,fontFamily:T.mon,marginBottom:10,fontWeight:700}}>LONG-TERM STRUCTURAL ACTIONS (1-5 YEARS)</div>
+            {p.rcLong.map(function(x,i){return(<div key={i} style={{display:"flex",gap:10,marginBottom:8}}><div style={{width:20,height:20,borderRadius:4,background:T.grn+"22",color:T.grn,fontSize:10,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,fontFamily:T.mon}}>{"L"+(i+1)}</div><div style={{fontSize:12,color:T.ink2,lineHeight:1.55}}>{x}</div></div>)})}
+          </div>
+
+          {/* Confidence */}
+          <div style={{padding:"14px 18px",borderRadius:8,background:"#fef9ee",border:"1px solid #fcd34d"}}>
+            <div style={{fontSize:9,fontWeight:700,color:"#78350f",fontFamily:T.mon,marginBottom:3}}>CONFIDENCE NOTE</div>
+            <div style={{fontSize:10,color:T.mut,lineHeight:1.5}}>Simplified macro-accounting model. Directionally reliable, not a precise forecast. Key uncertainties: average km/year per motorcycle (6,000-10,000), Pertamina compensation formula, EV adoption trajectory. CO2: IPCC standard 2.31 kg/liter. Tree absorption: EPA average 22 kg/year.</div>
+          </div>
         </div>
       </div>
     </section>
@@ -367,7 +444,7 @@ export default function App(){
         <div {...an("me")} style={{marginBottom:32,textAlign:"center"}}><h2 style={{fontSize:M?"22px":"32px",fontWeight:400,color:T.ink,fontFamily:T.ser}}>How this works</h2></div>
         {[["Model","Oil \u2192 landed cost \u2192 subsidy gap \u2192 fiscal burden \u2192 trade deficit \u2192 inflation \u2192 FX. EVs reduce gasoline volume."],
           ["Data","Crack $10/bbl. 159L/bbl. Pertalite IDR10K/L. Vol ~30BL/yr. Imports ~300Kbpd. CPI 4%. Fleet 130M. GDP ~$1,400B."],
-          ["Sources","BI \u00B7 MoF \u00B7 BPS \u00B7 ESDM \u00B7 IEA \u00B7 World Bank \u00B7 IISD \u00B7 ICCT \u00B7 IPCC"],
+          ["Sources","BI, MoF, BPS, ESDM, IEA, World Bank, IISD, ICCT, IPCC"],
           ["Limits","No GDP model, endogenous FX, BI reaction, provincial data, grid constraints, battery imports."]
         ].map(([t,d],i)=><div key={i} {...an("me",i*0.06)} style={{padding:"16px 20px",borderRadius:10,border:`1px solid ${T.brd}`,background:T.card,marginBottom:8}}><div style={{fontSize:12,fontWeight:600,color:T.ink,fontFamily:T.ser,marginBottom:4}}>{t}</div><div style={{fontSize:11,color:T.mut,lineHeight:1.6}}>{d}</div></div>)}
       </div>
@@ -377,7 +454,7 @@ export default function App(){
     <footer style={{padding:M?"48px 20px 32px":"64px 48px 40px",borderTop:`1px solid ${T.brd}`,background:T.bg}}>
       <div style={{maxWidth:620,margin:"0 auto",textAlign:"center"}}>
         <div style={{fontSize:16,color:T.ink,fontFamily:T.ser,marginBottom:6}}>Indonesia Oil-Macro-EV Simulator</div>
-        <div style={{fontSize:10,color:T.mut,fontFamily:T.mon,marginBottom:20}}>BI \u00B7 MoF \u00B7 BPS \u00B7 ESDM \u00B7 IEA \u00B7 World Bank \u00B7 IISD \u00B7 ICCT</div>
+        <div style={{fontSize:10,color:T.mut,fontFamily:T.mon,marginBottom:20}}>{"BI | MoF | BPS | ESDM | IEA | World Bank | IISD | ICCT"}</div>
         <div style={{padding:"18px 20px",borderRadius:10,background:T.card,border:`1px solid ${T.brd}`,marginBottom:14,textAlign:"left"}}>
           <div style={{fontSize:12,color:T.mut,lineHeight:1.75,fontStyle:"italic",fontFamily:T.ser}}>This simulation combines research with simplifying assumptions to make complex macroeconomics accessible. Not a conclusion \u2014 an <strong style={{fontStyle:"normal",color:T.ink}}>invitation to think</strong>. I'd be happy if others improve it. The goal was to start a more informed conversation.</div>
         </div>
@@ -386,7 +463,7 @@ export default function App(){
           <div style={{fontSize:11,color:T.mut2,marginBottom:8}}>EV enthusiast exploring energy economics & Indonesia's future</div>
           <div style={{fontSize:11,color:T.mut}}>{"\u2709"} <a href="mailto:gunawan_pnjaitan@yahoo.co.id" style={{color:T.acc,textDecoration:"none"}}>gunawan_pnjaitan@yahoo.co.id</a> <span style={{margin:"0 8px"}}>|</span> <a href="https://www.linkedin.com/in/gunawan-panjaitan/" target="_blank" rel="noopener noreferrer" style={{color:T.acc,textDecoration:"none"}}>LinkedIn</a></div>
         </div>
-        <div style={{fontSize:9,color:T.mut2,marginTop:14,fontFamily:T.mon}}>Provisional estimates \u00B7 Validate before policy use \u00B7 \u00A9 2026</div>
+        <div style={{fontSize:9,color:T.mut2,marginTop:14,fontFamily:T.mon}}>{"Provisional estimates | Validate before policy use | 2026"}</div>
       </div>
     </footer>
 
