@@ -338,7 +338,7 @@ export default function App() {
             <div style={{ maxWidth: 600 }}>
               <div style={{ fontSize: 10, color: T.mut, textTransform: "uppercase", letterSpacing: 6, marginBottom: 20, fontFamily: T.mon }}>Indonesia Macro Simulation</div>
               <h1 style={{ fontSize: M ? "32px" : "clamp(40px,5.5vw,64px)", fontWeight: 400, lineHeight: 1.08, color: T.ink, letterSpacing: -2, fontFamily: T.ser }}>How oil prices shape<br /><span style={{ color: T.acc }}>Indonesia's</span> economy.</h1>
-              <p style={{ fontSize: M ? 13 : 16, color: T.mut, maxWidth: 480, marginTop: 20, lineHeight: 1.7 }}>Interactive decision-support for policy makers, EV 2 Wheeler players, researchers, and investors.</p>
+              <p style={{ fontSize: M ? 13 : 16, color: T.ink, maxWidth: 480, marginTop: 20, lineHeight: 1.7 }}>Interactive decision-support for policy makers, EV 2-Wheeler players, researchers, and investors.</p>
               <div style={{ marginTop: 28, padding: "16px 24px", borderRadius: 10, background: "rgba(26,26,46,0.06)", border: "1px solid " + T.brd, display: "inline-block" }}>
                 <div style={{ fontSize: 9, color: T.mut, textTransform: "uppercase", letterSpacing: 3, marginBottom: 4, fontFamily: T.mon }}>Indonesia has spent on oil imports since you opened this page</div>
                 <div style={{ fontSize: M ? 26 : 38, fontWeight: 700, color: T.red, fontFamily: T.mon, letterSpacing: -1 }}>{"$" + Math.floor(cnt).toLocaleString()}</div>
@@ -370,7 +370,7 @@ export default function App() {
         </div>
 
         {/* NET IMPORTER BOX */}
-        <div {...an("w", 0.08)} style={{ maxWidth: 800, margin: "0 auto 40px", padding: M ? "24px 20px" : "32px 36px", borderRadius: 14, background: T.ink, position: "relative", overflow: "hidden" }}>
+        <div {...an("w", 0.08)} style={{ maxWidth: 800, margin: "0 auto 20px", padding: M ? "24px 20px" : "32px 36px", borderRadius: 14, background: T.ink, position: "relative", overflow: "hidden" }}>
           <div style={{ position: "absolute", top: 0, left: 0, width: 4, height: "100%", background: T.red }} />
           <div style={{ fontSize: 10, color: "#f87171", textTransform: "uppercase", letterSpacing: 3, fontFamily: T.mon, marginBottom: 12, fontWeight: 700 }}>NET OIL IMPORTER SINCE 2004</div>
           <div style={{ display: "grid", gridTemplateColumns: M ? "1fr" : "1fr auto 1fr auto 1fr", gap: M ? 12 : 0, alignItems: "center", marginBottom: 16 }}>
@@ -380,8 +380,27 @@ export default function App() {
             {!M && <div style={{ fontSize: 24, color: "#475569", textAlign: "center", padding: "0 16px" }}>=</div>}
             <div style={{ textAlign: "center" }}><div style={{ fontSize: M ? 28 : 36, fontWeight: 700, color: "#f87171", fontFamily: T.mon }}>1.02M</div><div style={{ fontSize: 10, color: "#94a3b8", fontFamily: T.mon }}>bbl/day IMPORTED</div></div>
           </div>
-          <div style={{ fontSize: 13, color: "#cbd5e1", lineHeight: 1.7, fontFamily: T.ser, fontStyle: "italic" }}>Every single day, Indonesia must import over 1 million barrels of oil. That is over USD 80 million leaving the country daily. This money does not build roads, hospitals, or schools. It flows to oil-producing nations while Indonesia's own reserves deplete further.</div>
+          <div style={{ fontSize: 13, color: "#cbd5e1", lineHeight: 1.7, fontFamily: T.ser, fontStyle: "italic" }}>Every single day, Indonesia must import over 1 million barrels of oil from abroad. That is over USD 80 million leaving the country daily. This money does not build Indonesian roads, hospitals, or schools. It flows directly to oil-producing nations while domestic reserves deplete at 5-15% per year.</div>
           <div style={{ marginTop: 12, fontSize: 12, color: "#f87171", fontWeight: 600, fontFamily: T.mon }}>This is not a future risk. This is happening right now.</div>
+        </div>
+
+        {/* RISK CARDS — why this is urgent */}
+        <div {...an("w", 0.12)} style={{ maxWidth: 800, margin: "0 auto 40px", display: "grid", gridTemplateColumns: M ? "1fr" : "1fr 1fr 1fr", gap: 10 }}>
+          <div style={{ padding: "18px 16px", borderRadius: 10, background: "#fef2f2", border: "1px solid #fca5a5" }}>
+            <div style={{ fontSize: 20, marginBottom: 6 }}>{"\uD83C\uDF0D"}</div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: "#991b1b", marginBottom: 6, fontFamily: T.mon }}>GEOPOLITICAL RISK</div>
+            <div style={{ fontSize: 11, color: T.ink2, lineHeight: 1.55 }}>A single conflict in the Strait of Hormuz, Middle East war, or OPEC supply cut could spike oil prices overnight. Indonesia has zero buffer. In Feb 2026, Iran-US tensions already forced emergency supply rerouting from Middle East to US crude.</div>
+          </div>
+          <div style={{ padding: "18px 16px", borderRadius: 10, background: "#fef9ee", border: "1px solid #fcd34d" }}>
+            <div style={{ fontSize: 20, marginBottom: 6 }}>{"\uD83D\uDCB8"}</div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: "#92400e", marginBottom: 6, fontFamily: T.mon }}>FISCAL SHOCK</div>
+            <div style={{ fontSize: 11, color: T.ink2, lineHeight: 1.55 }}>Every $1 rise in oil price adds up to IDR 4 trillion in annual subsidy obligations. In 2022, energy subsidies hit IDR 551T (2.8% of GDP), forcing emergency budget revision. The APBN is a hostage to global oil markets.</div>
+          </div>
+          <div style={{ padding: "18px 16px", borderRadius: 10, background: "#eff6ff", border: "1px solid #93c5fd" }}>
+            <div style={{ fontSize: 20, marginBottom: 6 }}>{"\u26A0\uFE0F"}</div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: "#1e3a5f", marginBottom: 6, fontFamily: T.mon }}>DECLINING RESERVES</div>
+            <div style={{ fontSize: 11, color: T.ink2, lineHeight: 1.55 }}>Indonesia's proven reserves stand at just 2.3 billion barrels (EIA 2024), declining 2.8% annually. At current production, reserves last roughly 11 years. Production has fallen from 1.6M bpd in the 1990s to 580K today. The problem gets worse every year.</div>
+          </div>
         </div>
 
         {/* Image cards */}
