@@ -380,7 +380,7 @@ export default function App() {
             {!M && <div style={{ fontSize: 24, color: "#475569", textAlign: "center", padding: "0 16px" }}>=</div>}
             <div style={{ textAlign: "center" }}><div style={{ fontSize: M ? 28 : 36, fontWeight: 700, color: "#f87171", fontFamily: T.mon }}>1.02M</div><div style={{ fontSize: 10, color: "#94a3b8", fontFamily: T.mon }}>bbl/day IMPORTED</div></div>
           </div>
-          <div style={{ fontSize: 13, color: "#cbd5e1", lineHeight: 1.7, fontFamily: T.ser, fontStyle: "italic" }}>Every single day, Indonesia must import over 1 million barrels of oil from abroad. That is over USD 80 million leaving the country daily. This money does not build Indonesian roads, hospitals, or schools. It flows directly to oil-producing nations while domestic reserves deplete at 5-15% per year.</div>
+          <div style={{ fontSize: 13, color: "#cbd5e1", lineHeight: 1.7, fontFamily: T.ser, fontStyle: "italic" }}>Every single day, Indonesia must import over 1 million barrels of oil from abroad. That is over USD 80 million leaving the country daily. This money does not build Indonesian roads, hospitals, or schools. It flows directly to oil-producing nations while domestic reserves deplete at 2-8% per year.</div>
           <div style={{ marginTop: 12, fontSize: 12, color: "#f87171", fontWeight: 600, fontFamily: T.mon }}>This is not a future risk. This is happening right now.</div>
         </div>
 
