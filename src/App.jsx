@@ -389,7 +389,7 @@ export default function App() {
           <div style={{ padding: "18px 16px", borderRadius: 10, background: "#fef2f2", border: "1px solid #fca5a5" }}>
             <div style={{ fontSize: 20, marginBottom: 6 }}>{"\uD83C\uDF0D"}</div>
             <div style={{ fontSize: 11, fontWeight: 700, color: "#991b1b", marginBottom: 6, fontFamily: T.mon }}>GEOPOLITICAL RISK</div>
-            <div style={{ fontSize: 11, color: T.ink2, lineHeight: 1.55 }}>A single conflict in the Strait of Hormuz, Middle East war, or OPEC supply cut could spike oil prices overnight. Indonesia has zero buffer. In Feb 2026, Iran-US tensions already forced emergency supply rerouting from Middle East to US crude.</div>
+            <div style={{ fontSize: 11, color: T.ink2, lineHeight: 1.55 }}>A single conflict in the Strait of Hormuz, Middle East war, or OPEC supply cut could spike oil prices overnight. Indonesia has only ~20 days buffer in normal condition. In Feb 2026, Iran-US tensions already forced emergency supply rerouting from Middle East to US crude.</div>
           </div>
           <div style={{ padding: "18px 16px", borderRadius: 10, background: "#fef9ee", border: "1px solid #fcd34d" }}>
             <div style={{ fontSize: 20, marginBottom: 6 }}>{"\uD83D\uDCB8"}</div>
