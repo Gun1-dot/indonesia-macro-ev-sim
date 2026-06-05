@@ -1,16 +1,16 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 
-/* ═══════════ SIMULATION ENGINE ═══════════ */
+/* =========== SIMULATION ENGINE =========== */
 // Commercial segment data (research-backed):
 // Total ojol/logistics motorcycle riders: ~5M (GARDA: 4M+, BPJS: 2M registered, Maxim: 7M total)
 // Using 5M as best midpoint for active commercial riders (ojek + courier)
 // 5M / 130M fleet = 3.85% commercial share today
 // Commercial avg: ~150 km/day = 54,750 km/yr
-// Retail avg: ~30 km/day = 10,950 km/yr (previously modelled as 8,000 km/yr — updating to 10,950 for realism)
+// Retail avg: ~30 km/day = 10,950 km/yr (previously modelled as 8,000 km/yr  --  updating to 10,950 for realism)
 // Fuel efficiency: 0.025 L/km (25 km/L) for both segments
 var COMMERCIAL_BASE_M = 5;    // 5 million current commercial riders
-var COMMERCIAL_KM_YR = 54750; // 150 km/day × 365
-var RETAIL_KM_YR = 10950;     // 30 km/day × 365
+var COMMERCIAL_KM_YR = 54750; // 150 km/day x 365
+var RETAIL_KM_YR = 10950;     // 30 km/day x 365
 var FLEET_M = 130;             // total fleet millions
 
 function runSim(inp) {
@@ -95,7 +95,7 @@ function runSim(inp) {
   };
 }
 
-/* ═══════════ POLICY ENGINE ═══════════ */
+/* =========== POLICY ENGINE =========== */
 function genPolicy(r, inp) {
   var entries = [];
   entries.push(["fiscal", r.st.fiscal]);
@@ -187,7 +187,7 @@ function genPolicy(r, inp) {
   return { hl: hl, sv: sev, top: topName, f1: f1, f2: f2, wn: wn, wif: wif, rcShort: rcShort, rcLong: rcLong };
 }
 
-/* ═══════════ PRESETS ═══════════ */
+/* =========== PRESETS =========== */
 var PR = [
   { n: "Base Case", d: "Current", b: 75, u: 15800, p: 15, e: 0.2, t: 1, k: 8000, s: 1, ec: 0, er2: 0.2 },
   { n: "Oil Shock", d: "$110/bbl", b: 110, u: 16200, p: 15, e: 0.2, t: 1, k: 8000, s: 1, ec: 0, er2: 0.2 },
@@ -205,23 +205,23 @@ var T = {
   ser: "'DM Serif Text',Georgia,serif", mon: "'Space Mono',monospace", san: "'Instrument Sans',-apple-system,sans-serif"
 };
 
-/* ═══════════ VARIABLE DEFINITIONS ═══════════ */
+/* =========== VARIABLE DEFINITIONS =========== */
 var DEFS = {
   brent: "Brent Crude: The global benchmark oil price. Every $1 increase adds ~IDR 4 trillion to Indonesia's annual subsidy obligations.",
-  usdIdr: "USD/IDR Rate: Rupiah per US dollar. A weaker rupiah amplifies the oil import bill since crude is priced in USD — a double hit when oil prices rise.",
+  usdIdr: "USD/IDR Rate: Rupiah per US dollar. A weaker rupiah amplifies the oil import bill since crude is priced in USD  --  a double hit when oil prices rise.",
   passThrough: "Pass-Through: % of oil price increase passed to consumers at the pump. 0% = government fully absorbs via subsidies. 100% = full market price.",
   evB2C: "B2C Retail EV: % of the 125M personal/commuter motorcycles that are electric. Average 30 km/day (10,950 km/yr). Large fleet, lower per-unit oil displacement.",
-  evB2B: "B2B Fleet EV: % of the 5M ojol/logistics motorcycles that are electric. These ride ~150 km/day (54,750 km/yr) — 5× more fuel displacement per unit than retail. Highest ROI per EV subsidy dollar."
+  evB2B: "B2B Fleet EV: % of the 5M ojol/logistics motorcycles that are electric. These ride ~150 km/day (54,750 km/yr)  --  5x more fuel displacement per unit than retail. Highest ROI per EV subsidy dollar."
 };
 
-/* ═══════════ HOOKS ═══════════ */
+/* =========== HOOKS =========== */
 function useW() {
   var _s = useState(1200), w = _s[0], sw = _s[1];
   useEffect(function() { sw(window.innerWidth); var h = function() { sw(window.innerWidth); }; window.addEventListener("resize", h); return function() { window.removeEventListener("resize", h); }; }, []);
   return w;
 }
 
-/* ═══════════ MAIN APP ═══════════ */
+/* =========== MAIN APP =========== */
 export default function App() {
   var _i = useState({ brent: 75, usdIdr: 15800, passThrough: 15, evFleetPct: 0.2, evCommPct: 0, evRetailPct: 0.2, timeHorizon: 1, avgKmPerBike: 8000, subsidyIntensity: 1 });
   var inp = _i[0], si = _i[1];
@@ -263,7 +263,7 @@ export default function App() {
   var stressLabel = r.ov <= 2.5 ? "LOW" : r.ov <= 5 ? "MODERATE" : r.ov <= 7.5 ? "HIGH" : "SEVERE";
   var stressBg = r.ov <= 2.5 ? "#eef7ee" : r.ov <= 5 ? "#fef9ee" : r.ov <= 7.5 ? "#fef3ec" : "#fef2f2";
 
-  // SLIDER — rendered inline to avoid re-mount issues
+  // SLIDER  --  rendered inline to avoid re-mount issues
   function renderSlider(label, value, onChange, min, max, step, unit, sub, defKey) {
     var pct = ((value - min) / (max - min)) * 100;
     var doMinus = function(evt) {
@@ -374,7 +374,7 @@ export default function App() {
       {/* Progress */}
       <div style={{ position: "fixed", top: 0, left: 0, width: scrollP + "%", height: 2, background: "linear-gradient(90deg," + T.acc + "," + T.ev + ")", zIndex: 99998 }} />
 
-      {/* ═══ HERO ═══ */}
+      {/* === HERO === */}
       <section ref={rf("h")} style={{ position: "relative", overflow: "hidden" }}>
         <div style={{ position: "absolute", inset: 0, backgroundImage: "url(" + IMG.hero + ")", backgroundSize: "cover", backgroundPosition: "center" }} />
         <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg,rgba(250,248,243,0.93),rgba(250,248,243,0.75),rgba(250,248,243,0.5))" }} />
@@ -398,7 +398,7 @@ export default function App() {
         </div>
       </section>
 
-      {/* ═══ STATS STRIP ═══ */}
+      {/* === STATS STRIP === */}
       <section ref={rf("st")} style={{ background: T.ink, padding: M ? "32px 20px" : "28px 48px" }}>
         <div {...an("st")} style={{ maxWidth: 1100, margin: "0 auto", display: "grid", gridTemplateColumns: M ? "1fr 1fr" : "repeat(4,1fr)", gap: M ? 16 : 0, textAlign: "center" }}>
           {[{ n: "1.6M", l: "bbl/day consumed" }, { n: "580K", l: "bbl/day produced" }, { n: "$29.6B", l: "annual oil imports" }, { n: "130M", l: "motorcycles" }].map(function(x, i) {
@@ -407,7 +407,7 @@ export default function App() {
         </div>
       </section>
 
-      {/* ═══ CHALLENGE — NET IMPORTER ═══ */}
+      {/* === CHALLENGE  --  NET IMPORTER === */}
       <section id="why" ref={rf("w")} style={{ padding: M ? "56px 20px" : "80px 48px", maxWidth: 1200, margin: "0 auto" }}>
         <div {...an("w")} style={{ textAlign: "center", marginBottom: 20 }}>
           <div style={{ fontSize: 10, color: T.mut, textTransform: "uppercase", letterSpacing: 6, fontFamily: T.mon, marginBottom: 12 }}>The Challenge</div>
@@ -429,7 +429,7 @@ export default function App() {
           <div style={{ marginTop: 12, fontSize: 12, color: "#f87171", fontWeight: 600, fontFamily: T.mon }}>This is not a future risk. This is happening right now.</div>
         </div>
 
-        {/* RISK CARDS — why this is urgent */}
+        {/* RISK CARDS  --  why this is urgent */}
         <div {...an("w", 0.12)} style={{ maxWidth: 800, margin: "0 auto 40px", display: "grid", gridTemplateColumns: M ? "1fr" : "1fr 1fr 1fr", gap: 10 }}>
           <div style={{ padding: "18px 16px", borderRadius: 10, background: "#fef2f2", border: "1px solid #fca5a5" }}>
             <div style={{ fontSize: 20, marginBottom: 6 }}>{"\uD83C\uDF0D"}</div>
@@ -467,7 +467,7 @@ export default function App() {
         </div>
       </section>
 
-      {/* ═══ TRANSMISSION ═══ */}
+      {/* === TRANSMISSION === */}
       <section ref={rf("ch")} style={{ padding: M ? "48px 20px" : "56px 48px", background: T.bg2 }}>
         <div style={{ maxWidth: 1100, margin: "0 auto" }}>
           <div {...an("ch")} style={{ textAlign: "center", marginBottom: 32 }}>
@@ -487,7 +487,7 @@ export default function App() {
         </div>
       </section>
 
-      {/* ═══ SIMULATION ═══ */}
+      {/* === SIMULATION === */}
       <section id="sim" ref={rf("sm")} style={{ padding: M ? "56px 16px" : "80px 48px", maxWidth: 1200, margin: "0 auto" }}>
         <div {...an("sm")} style={{ textAlign: "center", marginBottom: 36 }}>
           <h2 style={{ fontSize: M ? "26px" : "clamp(30px,4vw,50px)", fontWeight: 400, color: T.ink, fontFamily: T.ser }}>Adjust. Simulate. <span style={{ color: T.acc }}>Understand.</span></h2>
@@ -508,7 +508,7 @@ export default function App() {
             <div style={{ marginTop: 6, marginBottom: 14, borderTop: "1px solid " + T.brd, paddingTop: 14 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
                 <div style={{ fontSize: 10, color: T.acc2, textTransform: "uppercase", letterSpacing: 3, fontFamily: T.mon, fontWeight: 700 }}>EV Adoption by Segment</div>
-                <div style={{ fontSize: 10, color: T.mut, fontFamily: T.mon }}>{r.evM}M total · {r.evTotalPct}% fleet</div>
+                <div style={{ fontSize: 10, color: T.mut, fontFamily: T.mon }}>{r.evM}M total  |  {r.evTotalPct}% fleet</div>
               </div>
               {/* Live mini summary */}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 14 }}>
@@ -523,7 +523,7 @@ export default function App() {
                   <div style={{ fontSize: 9, color: T.grn, fontWeight: 600 }}>{r.dpRetail} BL/yr</div>
                 </div>
               </div>
-              {r.uplift > 1.05 && <div style={{ textAlign: "center", fontSize: 10, color: T.grn, fontWeight: 700, marginBottom: 10, fontFamily: T.mon }}>⚡ B2B mix gives {r.uplift.toFixed(2)}× displacement vs B2C-only</div>}
+              {r.uplift > 1.05 && <div style={{ textAlign: "center", fontSize: 10, color: T.grn, fontWeight: 700, marginBottom: 10, fontFamily: T.mon }}>(!) B2B mix gives {r.uplift.toFixed(2)}x displacement vs B2C-only</div>}
             </div>
 
             {renderSlider("% B2B Fleet (Ojol/Logistics)", inp.evCommPct, function(v) { set("evCommPct", v); }, 0, 100, 5, "%", Math.round(inp.evCommPct / 100 * 5) + "M of 5M riders | 150 km/day", "evB2B")}
@@ -576,12 +576,12 @@ export default function App() {
         </div>
       </section>
 
-      {/* ═══ B2B vs B2C SENSITIVITY + POLICY RATIONALE ═══ */}
+      {/* === B2B vs B2C SENSITIVITY + POLICY RATIONALE === */}
       <section ref={rf("seg")} style={{ padding: M ? "48px 16px" : "72px 48px", maxWidth: 1200, margin: "0 auto" }}>
         <div {...an("seg")} style={{ textAlign: "center", marginBottom: 36 }}>
           <div style={{ fontSize: 10, color: T.mut, textTransform: "uppercase", letterSpacing: 6, fontFamily: T.mon, marginBottom: 12 }}>Segment Analysis</div>
           <h2 style={{ fontSize: M ? "24px" : "clamp(28px,4vw,44px)", fontWeight: 400, color: T.ink, fontFamily: T.ser }}>Why B2B Fleet EV is the<br /><span style={{ color: T.acc }}>highest-ROI policy priority</span></h2>
-          <p style={{ fontSize: 13, color: T.mut, maxWidth: 560, margin: "12px auto 0", lineHeight: 1.65 }}>Indonesia's 5M ojol/logistics motorcycles are only 3.8% of the fleet — but ride 150 km/day vs 30 km/day for retail. Electrifying one B2B unit displaces 5× more gasoline than one B2C unit.</p>
+          <p style={{ fontSize: 13, color: T.mut, maxWidth: 560, margin: "12px auto 0", lineHeight: 1.65 }}>Indonesia's 5M ojol/logistics motorcycles are only 3.8% of the fleet  --  but ride 150 km/day vs 30 km/day for retail. Electrifying one B2B unit displaces 5x more gasoline than one B2C unit.</p>
         </div>
 
         {/* Segment cards side by side */}
@@ -596,8 +596,8 @@ export default function App() {
                 ["Total riders", "~5 million", "GARDA + BPJS data"],
                 ["Fleet share", "3.8% of 130M", "Small segment"],
                 ["Avg daily km", "150 km/day", "Full-time livelihood"],
-                ["Gasoline/unit/yr", "1,369 liters", "54,750 km × 0.025 L/km"],
-                ["Per-unit displacement", "5× retail", "At same EV adoption %"],
+                ["Gasoline/unit/yr", "1,369 liters", "54,750 km x 0.025 L/km"],
+                ["Per-unit displacement", "5x retail", "At same EV adoption %"],
                 ["Gasoline share", "~19% of motorcycle fuel", "Despite 3.8% of fleet"],
               ].map(function(row, i) {
                 return <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: i < 5 ? "1px solid " + T.brd + "66" : "none", alignItems: "baseline" }}>
@@ -625,8 +625,8 @@ export default function App() {
                 ["Total riders", "~125 million", "AISI fleet data"],
                 ["Fleet share", "96.2% of 130M", "Dominant segment"],
                 ["Avg daily km", "30 km/day", "Commuting, errands"],
-                ["Gasoline/unit/yr", "274 liters", "10,950 km × 0.025 L/km"],
-                ["Per-unit displacement", "1× baseline", "Reference unit"],
+                ["Gasoline/unit/yr", "274 liters", "10,950 km x 0.025 L/km"],
+                ["Per-unit displacement", "1x baseline", "Reference unit"],
                 ["Gasoline share", "~81% of motorcycle fuel", "Despite 96.2% of fleet"],
               ].map(function(row, i) {
                 return <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: i < 5 ? "1px solid " + T.brd + "66" : "none", alignItems: "baseline" }}>
@@ -648,7 +648,7 @@ export default function App() {
         {/* B2B Sensitivity Table */}
         <div {...an("seg", 0.2)} style={{ maxWidth: 860, margin: "0 auto 36px", borderRadius: 14, border: "1px solid " + T.brd, background: T.card, overflow: "hidden" }}>
           <div style={{ padding: "16px 24px", background: T.bg2, borderBottom: "1px solid " + T.brd }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: T.ink, fontFamily: T.mon }}>SENSITIVITY: % B2B FLEET EV → MACRO OUTPUTS</div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: T.ink, fontFamily: T.mon }}>SENSITIVITY: % B2B FLEET EV --> MACRO OUTPUTS</div>
             <div style={{ fontSize: 10, color: T.mut, marginTop: 3 }}>B2C held at {inp.evRetailPct}% | Brent ${inp.brent}/bbl | IDR {inp.usdIdr.toLocaleString()}</div>
           </div>
           <div style={{ overflowX: "auto" }}>
@@ -664,14 +664,14 @@ export default function App() {
                   var cur = pct === inp.evCommPct;
                   var rowBg = cur ? "#ecfeff" : i % 2 === 1 ? T.bg2 : "transparent";
                   return <tr key={pct} style={{ borderBottom: "1px solid " + T.brd + "44", background: rowBg }}>
-                    <td style={{ padding: "10px 12px", fontSize: 13, fontWeight: cur ? 700 : 500, color: cur ? T.acc2 : T.ink, fontFamily: T.mon }}>{pct}%{cur ? " ← now" : ""}</td>
+                    <td style={{ padding: "10px 12px", fontSize: 13, fontWeight: cur ? 700 : 500, color: cur ? T.acc2 : T.ink, fontFamily: T.mon }}>{pct}%{cur ? " <-- now" : ""}</td>
                     <td style={{ padding: "10px 12px", fontSize: 11, color: T.mut, fontFamily: T.mon }}>{(pct / 100 * 5).toFixed(1)}M</td>
                     <td style={{ padding: "10px 12px", fontSize: 12, color: T.grn, fontWeight: 600, fontFamily: T.mon }}>{s.dp} BL</td>
                     <td style={{ padding: "10px 12px", fontSize: 12, color: T.grn, fontWeight: 600, fontFamily: T.mon }}>${s.ai}B</td>
                     <td style={{ padding: "10px 12px", fontSize: 12, color: T.grn, fontFamily: T.mon }}>Rp{s.as2}T</td>
                     <td style={{ padding: "10px 12px", fontSize: 12, color: T.grn, fontFamily: T.mon }}>{(s.co2 / 1e6).toFixed(1)}Mt</td>
                     <td style={{ padding: "10px 12px" }}>
-                      <div style={{ display: "inline-block", padding: "2px 8px", borderRadius: 4, background: s.uplift > 1.1 ? T.acc2 : T.brd, color: s.uplift > 1.1 ? "#fff" : T.mut, fontSize: 11, fontWeight: 700, fontFamily: T.mon }}>{s.uplift.toFixed(2)}×</div>
+                      <div style={{ display: "inline-block", padding: "2px 8px", borderRadius: 4, background: s.uplift > 1.1 ? T.acc2 : T.brd, color: s.uplift > 1.1 ? "#fff" : T.mut, fontSize: 11, fontWeight: 700, fontFamily: T.mon }}>{s.uplift.toFixed(2)}x</div>
                     </td>
                   </tr>;
                 })}
@@ -680,14 +680,14 @@ export default function App() {
           </div>
           <div style={{ padding: "14px 20px", background: "#fef9ee", borderTop: "1px solid #fcd34d" }}>
             <div style={{ fontSize: 10, fontWeight: 700, color: "#78350f", fontFamily: T.mon, marginBottom: 4 }}>READING THE TABLE</div>
-            <div style={{ fontSize: 11, color: T.mut, lineHeight: 1.6 }}>The last column shows the gasoline displacement multiplier vs a world where all EVs are B2C-only. At 100% B2B electrification (5M units), Indonesia gets the same oil displacement as converting ~24M retail motorcycles — while touching only 3.8% of the fleet.</div>
+            <div style={{ fontSize: 11, color: T.mut, lineHeight: 1.6 }}>The last column shows the gasoline displacement multiplier vs a world where all EVs are B2C-only. At 100% B2B electrification (5M units), Indonesia gets the same oil displacement as converting ~24M retail motorcycles  --  while touching only 3.8% of the fleet.</div>
           </div>
         </div>
 
         {/* B2C Sensitivity Table */}
         <div {...an("seg", 0.25)} style={{ maxWidth: 860, margin: "0 auto 48px", borderRadius: 14, border: "1px solid " + T.brd, background: T.card, overflow: "hidden" }}>
           <div style={{ padding: "16px 24px", background: T.bg2, borderBottom: "1px solid " + T.brd }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: T.ink, fontFamily: T.mon }}>SENSITIVITY: % B2C RETAIL EV → MACRO OUTPUTS</div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: T.ink, fontFamily: T.mon }}>SENSITIVITY: % B2C RETAIL EV --> MACRO OUTPUTS</div>
             <div style={{ fontSize: 10, color: T.mut, marginTop: 3 }}>B2B held at {inp.evCommPct}% | Brent ${inp.brent}/bbl | IDR {inp.usdIdr.toLocaleString()}</div>
           </div>
           <div style={{ overflowX: "auto" }}>
@@ -703,7 +703,7 @@ export default function App() {
                   var cur = Math.abs(pct - inp.evRetailPct) < 0.3;
                   var stressC = s.ov <= 2.5 ? T.grn : s.ov <= 5 ? T.amb : "#c2410c";
                   return <tr key={pct} style={{ borderBottom: "1px solid " + T.brd + "44", background: cur ? "#f5f3ff" : i % 2 === 1 ? T.bg2 : "transparent" }}>
-                    <td style={{ padding: "10px 12px", fontSize: 13, fontWeight: cur ? 700 : 500, color: cur ? "#7c3aed" : T.ink, fontFamily: T.mon }}>{pct}%{cur ? " ← now" : ""}</td>
+                    <td style={{ padding: "10px 12px", fontSize: 13, fontWeight: cur ? 700 : 500, color: cur ? "#7c3aed" : T.ink, fontFamily: T.mon }}>{pct}%{cur ? " <-- now" : ""}</td>
                     <td style={{ padding: "10px 12px", fontSize: 11, color: T.mut, fontFamily: T.mon }}>{(pct / 100 * 125).toFixed(0)}M</td>
                     <td style={{ padding: "10px 12px", fontSize: 12, color: T.grn, fontWeight: 600, fontFamily: T.mon }}>{s.dp} BL</td>
                     <td style={{ padding: "10px 12px", fontSize: 12, color: T.grn, fontWeight: 600, fontFamily: T.mon }}>${s.ai}B</td>
@@ -719,7 +719,7 @@ export default function App() {
           </div>
         </div>
 
-        {/* POLICY RATIONALE — Why B2B subsidy matters */}
+        {/* POLICY RATIONALE  --  Why B2B subsidy matters */}
         <div {...an("seg", 0.3)} style={{ maxWidth: 860, margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: 24 }}>
             <div style={{ fontSize: 10, color: T.mut, textTransform: "uppercase", letterSpacing: 6, fontFamily: T.mon, marginBottom: 10 }}>Policy Analysis</div>
@@ -742,7 +742,7 @@ export default function App() {
                 color: T.grn,
                 bg: "#f0fdf4",
                 border: "#86efac",
-                body: "An ojol rider burning 1,369 L/yr at the subsidized Pertalite price means the government loses ~IDR 2.3 million/year per rider in subsidy. Convert that rider to EV and the savings pay back a IDR 7M unit subsidy in just 3 years — compared to 15+ years for retail."
+                body: "An ojol rider burning 1,369 L/yr at the subsidized Pertalite price means the government loses ~IDR 2.3 million/year per rider in subsidy. Convert that rider to EV and the savings pay back a IDR 7M unit subsidy in just 3 years  --  compared to 15+ years for retail."
               },
               {
                 icon: "\uD83C\uDFAF",
@@ -750,7 +750,7 @@ export default function App() {
                 color: T.amb,
                 bg: "#fef9ee",
                 border: "#fcd34d",
-                body: "B2B riders are registered with Gojek, Grab, Maxim, JNE, J&T — platform-trackable and verifiable. Subsidy leakage risk is minimal. The government knows exactly who they are, how far they ride, and whether the EV is being used commercially."
+                body: "B2B riders are registered with Gojek, Grab, Maxim, JNE, J&T  --  platform-trackable and verifiable. Subsidy leakage risk is minimal. The government knows exactly who they are, how far they ride, and whether the EV is being used commercially."
               },
               {
                 icon: "\uD83D\uDCC8",
@@ -758,7 +758,7 @@ export default function App() {
                 color: "#7c3aed",
                 bg: "#f5f3ff",
                 border: "#c4b5fd",
-                body: "B2B fleets operate at high utilization, making them the most cost-tolerant early adopters. When ojol drivers visibly switch to EVs, it normalizes the technology and reduces retail buyers' perception of risk. B2B electrification creates market pull for B2C adoption — at no additional subsidy cost."
+                body: "B2B fleets operate at high utilization, making them the most cost-tolerant early adopters. When ojol drivers visibly switch to EVs, it normalizes the technology and reduces retail buyers' perception of risk. B2B electrification creates market pull for B2C adoption  --  at no additional subsidy cost."
               },
               {
                 icon: "\uD83C\uDFED",
@@ -766,7 +766,7 @@ export default function App() {
                 color: T.red,
                 bg: "#fef2f2",
                 border: "#fca5a5",
-                body: "A committed B2B EV demand signal (e.g., 500K units/year for ojol) gives Indonesian EV manufacturers (Electrum, Gesits, Volta) bankable volume to justify local production lines. This creates manufacturing jobs and builds the battery supply chain — where Indonesia has 22% of global nickel."
+                body: "A committed B2B EV demand signal (e.g., 500K units/year for ojol) gives Indonesian EV manufacturers (Electrum, Gesits, Volta) bankable volume to justify local production lines. This creates manufacturing jobs and builds the battery supply chain  --  where Indonesia has 22% of global nickel."
               },
               {
                 icon: "\u2696",
@@ -774,7 +774,7 @@ export default function App() {
                 color: "#0369a1",
                 bg: "#eff6ff",
                 border: "#93c5fd",
-                body: "Ojol drivers earn IDR 2.4M/month on average while spending IDR 5.7M/month — net negative cash flow (LIPS 2024). They cannot afford EVs at market price without subsidy, yet they are the segment that would save the most on fuel. A B2B subsidy is simultaneously an oil import reduction strategy and social protection."
+                body: "Ojol drivers earn IDR 2.4M/month on average while spending IDR 5.7M/month  --  net negative cash flow (LIPS 2024). They cannot afford EVs at market price without subsidy, yet they are the segment that would save the most on fuel. A B2B subsidy is simultaneously an oil import reduction strategy and social protection."
               }
             ].map(function(card, i) {
               return <div key={i} style={{ padding: "20px", borderRadius: 12, background: card.bg, border: "1px solid " + card.border }}>
@@ -789,13 +789,13 @@ export default function App() {
           <div style={{ padding: "24px 28px", borderRadius: 14, background: T.ink }}>
             <div style={{ fontSize: 10, color: T.acc, textTransform: "uppercase", letterSpacing: 3, fontFamily: T.mon, marginBottom: 12 }}>POLICY CONCLUSION</div>
             <div style={{ fontSize: M ? 14 : 16, color: "#e2e8f0", lineHeight: 1.75, fontFamily: T.ser, fontStyle: "italic" }}>
-              "B2C-only EV subsidy is like watering a field one drop at a time. B2B subsidy is installing an irrigation system. The same budget, directed at 5M commercial riders instead of 125M retail riders, achieves faster oil import reduction, faster fiscal payback, lower leakage, and greater social impact — while simultaneously building the market infrastructure that eventually makes B2C adoption inevitable."
+              "B2C-only EV subsidy is like watering a field one drop at a time. B2B subsidy is installing an irrigation system. The same budget, directed at 5M commercial riders instead of 125M retail riders, achieves faster oil import reduction, faster fiscal payback, lower leakage, and greater social impact  --  while simultaneously building the market infrastructure that eventually makes B2C adoption inevitable."
             </div>
             <div style={{ marginTop: 16, display: "grid", gridTemplateColumns: M ? "1fr 1fr" : "repeat(4,1fr)", gap: 10 }}>
               {[
                 { label: "Subsidy payback (B2B)", value: "~3 yrs" },
                 { label: "Subsidy payback (B2C)", value: "~15 yrs" },
-                { label: "Oil saved per B2B unit", value: "5× B2C" },
+                { label: "Oil saved per B2B unit", value: "5x B2C" },
                 { label: "B2B riders in deficit", value: ">80%" }
               ].map(function(s, i) {
                 return <div key={i} style={{ textAlign: "center", padding: "10px 8px", borderRadius: 8, background: "rgba(255,255,255,0.06)" }}>
@@ -807,7 +807,7 @@ export default function App() {
           </div>
         </div>
       </section>
-      {/* ═══ EV HERO SECTION ═══ */}
+      {/* === EV HERO SECTION === */}
       <section ref={rf("ev")} style={{ position: "relative", overflow: "hidden" }}>
         <div style={{ position: "absolute", inset: 0, backgroundImage: "url(" + IMG.hero + ")", backgroundSize: "cover", backgroundPosition: "center" }} />
         <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg,rgba(6,182,212,0.9),rgba(6,214,160,0.85))" }} />
@@ -820,7 +820,7 @@ export default function App() {
         </div>
       </section>
 
-      {/* ═══ EV TABLE ═══ */}
+      {/* === EV TABLE === */}
       <section ref={rf("et")} style={{ padding: M ? "40px 16px" : "56px 48px", maxWidth: 1000, margin: "0 auto" }}>
         <div {...an("et")} style={{ borderRadius: 14, border: "1px solid " + T.brd, background: T.card, overflowX: "auto" }}>
           <div style={{ padding: M ? "16px" : "20px 24px", minWidth: 550 }}>
@@ -848,7 +848,7 @@ export default function App() {
         </div>
       </section>
 
-      {/* ═══ FISCAL + ENVIRONMENTAL ═══ */}
+      {/* === FISCAL + ENVIRONMENTAL === */}
       <section ref={rf("fd")} style={{ padding: M ? "56px 20px" : "80px 48px", background: T.bg2, position: "relative" }}>
         <div style={{ position: "absolute", inset: 0, backgroundImage: "url(" + IMG.sky + ")", backgroundSize: "cover", backgroundPosition: "center top", opacity: 0.04 }} />
         <div style={{ maxWidth: 1100, margin: "0 auto", position: "relative", zIndex: 2 }}>
@@ -866,7 +866,7 @@ export default function App() {
         </div>
       </section>
 
-      {/* ═══════════ POLICY BRIEF ═══════════ */}
+      {/* =========== POLICY BRIEF =========== */}
       <section ref={rf("po")} style={{ padding: M ? "56px 16px" : "80px 48px", background: T.bg }}>
         <div style={{ maxWidth: 780, margin: "0 auto" }}>
           <div {...an("po")} style={{ textAlign: "center", marginBottom: 40 }}>
@@ -926,7 +926,7 @@ export default function App() {
         </div>
       </section>
 
-      {/* ═══ METHODOLOGY ═══ */}
+      {/* === METHODOLOGY === */}
       <section ref={rf("me")} style={{ padding: M ? "48px 20px" : "64px 48px", background: T.bg2 }}>
         <div style={{ maxWidth: 700, margin: "0 auto" }}>
           <div {...an("me")} style={{ marginBottom: 32, textAlign: "center" }}><h2 style={{ fontSize: M ? "22px" : "32px", fontWeight: 400, color: T.ink, fontFamily: T.ser }}>How this works</h2></div>
@@ -943,7 +943,7 @@ export default function App() {
         </div>
       </section>
 
-      {/* ═══ FOOTER ═══ */}
+      {/* === FOOTER === */}
       <footer style={{ padding: M ? "48px 20px 32px" : "64px 48px 40px", borderTop: "1px solid " + T.brd, background: T.bg }}>
         <div style={{ maxWidth: 620, margin: "0 auto", textAlign: "center" }}>
           <div style={{ fontSize: 16, color: T.ink, fontFamily: T.ser, marginBottom: 6 }}>Indonesia Oil-Macro-EV Simulator</div>
