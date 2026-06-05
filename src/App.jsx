@@ -570,12 +570,6 @@ export default function App() {
           </div>
         </div>
       </section>
-
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* === B2B vs B2C SENSITIVITY + POLICY RATIONALE === */}
       <section ref={rf("seg")} style={{ padding: M ? "48px 16px" : "72px 48px", maxWidth: 1200, margin: "0 auto" }}>
         <div {...an("seg")} style={{ textAlign: "center", marginBottom: 36 }}>
@@ -648,7 +642,7 @@ export default function App() {
         {/* B2B Sensitivity Table */}
         <div {...an("seg", 0.2)} style={{ maxWidth: 860, margin: "0 auto 36px", borderRadius: 14, border: "1px solid " + T.brd, background: T.card, overflow: "hidden" }}>
           <div style={{ padding: "16px 24px", background: T.bg2, borderBottom: "1px solid " + T.brd }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: T.ink, fontFamily: T.mon }}>SENSITIVITY: % B2B FLEET EV --> MACRO OUTPUTS</div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: T.ink, fontFamily: T.mon }}>SENSITIVITY: % B2B FLEET EV ==> MACRO OUTPUTS</div>
             <div style={{ fontSize: 10, color: T.mut, marginTop: 3 }}>B2C held at {inp.evRetailPct}% | Brent ${inp.brent}/bbl | IDR {inp.usdIdr.toLocaleString()}</div>
           </div>
           <div style={{ overflowX: "auto" }}>
@@ -687,7 +681,7 @@ export default function App() {
         {/* B2C Sensitivity Table */}
         <div {...an("seg", 0.25)} style={{ maxWidth: 860, margin: "0 auto 48px", borderRadius: 14, border: "1px solid " + T.brd, background: T.card, overflow: "hidden" }}>
           <div style={{ padding: "16px 24px", background: T.bg2, borderBottom: "1px solid " + T.brd }}>
-            <div style={{ fontSize: 11, fontWeight: 700, color: T.ink, fontFamily: T.mon }}>SENSITIVITY: % B2C RETAIL EV --> MACRO OUTPUTS</div>
+            <div style={{ fontSize: 11, fontWeight: 700, color: T.ink, fontFamily: T.mon }}>SENSITIVITY: % B2C RETAIL EV ==> MACRO OUTPUTS</div>
             <div style={{ fontSize: 10, color: T.mut, marginTop: 3 }}>B2B held at {inp.evCommPct}% | Brent ${inp.brent}/bbl | IDR {inp.usdIdr.toLocaleString()}</div>
           </div>
           <div style={{ overflowX: "auto" }}>
